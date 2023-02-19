@@ -2,35 +2,32 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import { Contract, Signer, utils } from "ethers";
-import type { Provider } from "@ethersproject/providers";
-import type {
-  IThank,
-  IThankInterface,
-} from "../../../contracts/interfaces/IThank";
+import { Contract, Signer, utils } from 'ethers'
+import type { Provider } from '@ethersproject/providers'
+import type { IThank, IThankInterface } from '../../../contracts/interfaces/IThank'
 
 const _abi = [
   {
     inputs: [],
-    name: "getMaxCap",
+    name: 'getMaxCap',
     outputs: [
       {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256'
+      }
     ],
-    stateMutability: "view",
-    type: "function",
-  },
-];
+    stateMutability: 'view',
+    type: 'function'
+  }
+]
 
 export class IThank__factory {
-  static readonly abi = _abi;
+  static readonly abi = _abi
   static createInterface(): IThankInterface {
-    return new utils.Interface(_abi) as IThankInterface;
+    return new utils.Interface(_abi) as IThankInterface
   }
   static connect(address: string, signerOrProvider: Signer | Provider): IThank {
-    return new Contract(address, _abi, signerOrProvider) as IThank;
+    return new Contract(address, _abi, signerOrProvider) as IThank
   }
 }

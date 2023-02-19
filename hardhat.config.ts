@@ -1,72 +1,66 @@
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomiclabs/hardhat-ethers";
-import "@nomiclabs/hardhat-waffle";
-import "@typechain/hardhat";
-import dotenv from "dotenv";
+import { HardhatUserConfig } from 'hardhat/config'
+import '@nomiclabs/hardhat-ethers'
+import '@nomiclabs/hardhat-waffle'
+import '@typechain/hardhat'
+import dotenv from 'dotenv'
 
-import "./tasks";
+import './tasks'
 
-dotenv.config();
+dotenv.config()
 
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.7",
+        version: '0.8.7',
         settings: {
           optimizer: {
             enabled: true,
-            runs: 50,
-          },
-        },
+            runs: 50
+          }
+        }
       },
       {
-        version: "0.8.8",
+        version: '0.8.8',
         settings: {
           optimizer: {
-            enabled: true,
-          },
-        },
+            enabled: true
+          }
+        }
       },
       {
-        version: "0.8.9",
+        version: '0.8.9',
         settings: {
           optimizer: {
-            enabled: true,
-          },
-        },
-      },
-    ],
+            enabled: true
+          }
+        }
+      }
+    ]
   },
-  defaultNetwork: "localhost",
+  defaultNetwork: 'localhost',
   networks: {
     milkomedaTest: {
       url: `${process.env.MILKOMEDAT_URL}`,
       chainId: 200101,
-      accounts:
-        process.env.MILKOMEDAT_PK !== undefined
-          ? [process.env.MILKOMEDAT_PK]
-          : [],
+      accounts: process.env.MILKOMEDAT_PK !== undefined ? [process.env.MILKOMEDAT_PK] : []
     },
     milkomedaMain: {
       url: `${process.env.MILKOMEDAM_URL}`,
       chainId: 2001,
-      accounts:
-        process.env.MILKOMEDAM_PK !== undefined
-          ? [process.env.MILKOMEDAM_PK]
-          : [],
-    },
+      accounts: process.env.MILKOMEDAM_PK !== undefined ? [process.env.MILKOMEDAM_PK] : []
+    }
   },
   paths: {
-    artifacts: "./artifacts",
-    cache: "./cache",
-    sources: "./contracts",
-    tests: "./test",
+    artifacts: './artifacts',
+    cache: './cache',
+    sources: './contracts',
+    tests: './test'
   },
   typechain: {
-    outDir: "./typechain",
-    target: "ethers-v5",
-  },
-};
+    outDir: './typechain',
+    target: 'ethers-v5'
+  }
+}
 
-export default config;
+export default config

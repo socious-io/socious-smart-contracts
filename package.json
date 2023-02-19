@@ -44,7 +44,7 @@
     "balance": "hardhat balance",
     "generate": "hardhat generate",
     "account": "hardhat account",
-    "typechain": "hardhat typechain"
+    "typechain": "hardhat typechain",
+    "pretty": "prettier --write ."
   }
 }
- 

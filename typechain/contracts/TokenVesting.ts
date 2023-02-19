@@ -11,494 +11,358 @@ import type {
   Overrides,
   PopulatedTransaction,
   Signer,
-  utils,
-} from "ethers";
-import type {
-  FunctionFragment,
-  Result,
-  EventFragment,
-} from "@ethersproject/abi";
-import type { Listener, Provider } from "@ethersproject/providers";
-import type {
-  TypedEventFilter,
-  TypedEvent,
-  TypedListener,
-  OnEvent,
-  PromiseOrValue,
-} from "../common";
+  utils
+} from 'ethers'
+import type { FunctionFragment, Result, EventFragment } from '@ethersproject/abi'
+import type { Listener, Provider } from '@ethersproject/providers'
+import type { TypedEventFilter, TypedEvent, TypedListener, OnEvent, PromiseOrValue } from '../common'
 
 export interface TokenVestingInterface extends utils.Interface {
   functions: {
-    "beneficiary()": FunctionFragment;
-    "cancelVesting(address)": FunctionFragment;
-    "duration()": FunctionFragment;
-    "owner()": FunctionFragment;
-    "release(address)": FunctionFragment;
-    "release()": FunctionFragment;
-    "released()": FunctionFragment;
-    "released(address)": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
-    "start()": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
-    "vestedAmount(uint64)": FunctionFragment;
-    "vestedAmount(address,uint64)": FunctionFragment;
-    "vestingManager()": FunctionFragment;
-  };
+    'beneficiary()': FunctionFragment
+    'cancelVesting(address)': FunctionFragment
+    'duration()': FunctionFragment
+    'owner()': FunctionFragment
+    'release(address)': FunctionFragment
+    'release()': FunctionFragment
+    'released()': FunctionFragment
+    'released(address)': FunctionFragment
+    'renounceOwnership()': FunctionFragment
+    'start()': FunctionFragment
+    'transferOwnership(address)': FunctionFragment
+    'vestedAmount(uint64)': FunctionFragment
+    'vestedAmount(address,uint64)': FunctionFragment
+    'vestingManager()': FunctionFragment
+  }
 
   getFunction(
     nameOrSignatureOrTopic:
-      | "beneficiary"
-      | "cancelVesting"
-      | "duration"
-      | "owner"
-      | "release(address)"
-      | "release()"
-      | "released()"
-      | "released(address)"
-      | "renounceOwnership"
-      | "start"
-      | "transferOwnership"
-      | "vestedAmount(uint64)"
-      | "vestedAmount(address,uint64)"
-      | "vestingManager"
-  ): FunctionFragment;
+      | 'beneficiary'
+      | 'cancelVesting'
+      | 'duration'
+      | 'owner'
+      | 'release(address)'
+      | 'release()'
+      | 'released()'
+      | 'released(address)'
+      | 'renounceOwnership'
+      | 'start'
+      | 'transferOwnership'
+      | 'vestedAmount(uint64)'
+      | 'vestedAmount(address,uint64)'
+      | 'vestingManager'
+  ): FunctionFragment
 
+  encodeFunctionData(functionFragment: 'beneficiary', values?: undefined): string
+  encodeFunctionData(functionFragment: 'cancelVesting', values: [PromiseOrValue<string>]): string
+  encodeFunctionData(functionFragment: 'duration', values?: undefined): string
+  encodeFunctionData(functionFragment: 'owner', values?: undefined): string
+  encodeFunctionData(functionFragment: 'release(address)', values: [PromiseOrValue<string>]): string
+  encodeFunctionData(functionFragment: 'release()', values?: undefined): string
+  encodeFunctionData(functionFragment: 'released()', values?: undefined): string
+  encodeFunctionData(functionFragment: 'released(address)', values: [PromiseOrValue<string>]): string
+  encodeFunctionData(functionFragment: 'renounceOwnership', values?: undefined): string
+  encodeFunctionData(functionFragment: 'start', values?: undefined): string
+  encodeFunctionData(functionFragment: 'transferOwnership', values: [PromiseOrValue<string>]): string
+  encodeFunctionData(functionFragment: 'vestedAmount(uint64)', values: [PromiseOrValue<BigNumberish>]): string
   encodeFunctionData(
-    functionFragment: "beneficiary",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "cancelVesting",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(functionFragment: "duration", values?: undefined): string;
-  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "release(address)",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(functionFragment: "release()", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "released()",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "released(address)",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "renounceOwnership",
-    values?: undefined
-  ): string;
-  encodeFunctionData(functionFragment: "start", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "transferOwnership",
-    values: [PromiseOrValue<string>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "vestedAmount(uint64)",
-    values: [PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "vestedAmount(address,uint64)",
+    functionFragment: 'vestedAmount(address,uint64)',
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "vestingManager",
-    values?: undefined
-  ): string;
+  ): string
+  encodeFunctionData(functionFragment: 'vestingManager', values?: undefined): string
 
-  decodeFunctionResult(
-    functionFragment: "beneficiary",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "cancelVesting",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "duration", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "release(address)",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "release()", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "released()", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "released(address)",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "renounceOwnership",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "start", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "transferOwnership",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "vestedAmount(uint64)",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "vestedAmount(address,uint64)",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "vestingManager",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: 'beneficiary', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'cancelVesting', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'duration', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'owner', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'release(address)', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'release()', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'released()', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'released(address)', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'renounceOwnership', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'start', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'transferOwnership', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'vestedAmount(uint64)', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'vestedAmount(address,uint64)', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'vestingManager', data: BytesLike): Result
 
   events: {
-    "ERC20Released(address,uint256)": EventFragment;
-    "EtherReleased(uint256)": EventFragment;
-    "OwnershipTransferred(address,address)": EventFragment;
-  };
+    'ERC20Released(address,uint256)': EventFragment
+    'EtherReleased(uint256)': EventFragment
+    'OwnershipTransferred(address,address)': EventFragment
+  }
 
-  getEvent(nameOrSignatureOrTopic: "ERC20Released"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "EtherReleased"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: 'ERC20Released'): EventFragment
+  getEvent(nameOrSignatureOrTopic: 'EtherReleased'): EventFragment
+  getEvent(nameOrSignatureOrTopic: 'OwnershipTransferred'): EventFragment
 }
 
 export interface ERC20ReleasedEventObject {
-  token: string;
-  amount: BigNumber;
+  token: string
+  amount: BigNumber
 }
-export type ERC20ReleasedEvent = TypedEvent<
-  [string, BigNumber],
-  ERC20ReleasedEventObject
->;
+export type ERC20ReleasedEvent = TypedEvent<[string, BigNumber], ERC20ReleasedEventObject>
 
-export type ERC20ReleasedEventFilter = TypedEventFilter<ERC20ReleasedEvent>;
+export type ERC20ReleasedEventFilter = TypedEventFilter<ERC20ReleasedEvent>
 
 export interface EtherReleasedEventObject {
-  amount: BigNumber;
+  amount: BigNumber
 }
-export type EtherReleasedEvent = TypedEvent<
-  [BigNumber],
-  EtherReleasedEventObject
->;
+export type EtherReleasedEvent = TypedEvent<[BigNumber], EtherReleasedEventObject>
 
-export type EtherReleasedEventFilter = TypedEventFilter<EtherReleasedEvent>;
+export type EtherReleasedEventFilter = TypedEventFilter<EtherReleasedEvent>
 
 export interface OwnershipTransferredEventObject {
-  previousOwner: string;
-  newOwner: string;
+  previousOwner: string
+  newOwner: string
 }
-export type OwnershipTransferredEvent = TypedEvent<
-  [string, string],
-  OwnershipTransferredEventObject
->;
+export type OwnershipTransferredEvent = TypedEvent<[string, string], OwnershipTransferredEventObject>
 
-export type OwnershipTransferredEventFilter =
-  TypedEventFilter<OwnershipTransferredEvent>;
+export type OwnershipTransferredEventFilter = TypedEventFilter<OwnershipTransferredEvent>
 
 export interface TokenVesting extends BaseContract {
-  connect(signerOrProvider: Signer | Provider | string): this;
-  attach(addressOrName: string): this;
-  deployed(): Promise<this>;
+  connect(signerOrProvider: Signer | Provider | string): this
+  attach(addressOrName: string): this
+  deployed(): Promise<this>
 
-  interface: TokenVestingInterface;
+  interface: TokenVestingInterface
 
   queryFilter<TEvent extends TypedEvent>(
     event: TypedEventFilter<TEvent>,
     fromBlockOrBlockhash?: string | number | undefined,
     toBlock?: string | number | undefined
-  ): Promise<Array<TEvent>>;
+  ): Promise<Array<TEvent>>
 
-  listeners<TEvent extends TypedEvent>(
-    eventFilter?: TypedEventFilter<TEvent>
-  ): Array<TypedListener<TEvent>>;
-  listeners(eventName?: string): Array<Listener>;
-  removeAllListeners<TEvent extends TypedEvent>(
-    eventFilter: TypedEventFilter<TEvent>
-  ): this;
-  removeAllListeners(eventName?: string): this;
-  off: OnEvent<this>;
-  on: OnEvent<this>;
-  once: OnEvent<this>;
-  removeListener: OnEvent<this>;
+  listeners<TEvent extends TypedEvent>(eventFilter?: TypedEventFilter<TEvent>): Array<TypedListener<TEvent>>
+  listeners(eventName?: string): Array<Listener>
+  removeAllListeners<TEvent extends TypedEvent>(eventFilter: TypedEventFilter<TEvent>): this
+  removeAllListeners(eventName?: string): this
+  off: OnEvent<this>
+  on: OnEvent<this>
+  once: OnEvent<this>
+  removeListener: OnEvent<this>
 
   functions: {
-    beneficiary(overrides?: CallOverrides): Promise<[string]>;
+    beneficiary(overrides?: CallOverrides): Promise<[string]>
 
     cancelVesting(
       token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+    ): Promise<ContractTransaction>
 
-    duration(overrides?: CallOverrides): Promise<[BigNumber]>;
+    duration(overrides?: CallOverrides): Promise<[BigNumber]>
 
-    owner(overrides?: CallOverrides): Promise<[string]>;
+    owner(overrides?: CallOverrides): Promise<[string]>
 
-    "release(address)"(
+    'release(address)'(
       token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+    ): Promise<ContractTransaction>
 
-    "release()"(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+    'release()'(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<ContractTransaction>
 
-    "released()"(overrides?: CallOverrides): Promise<[BigNumber]>;
+    'released()'(overrides?: CallOverrides): Promise<[BigNumber]>
 
-    "released(address)"(
-      token: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    'released(address)'(token: PromiseOrValue<string>, overrides?: CallOverrides): Promise<[BigNumber]>
 
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+    renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<ContractTransaction>
 
-    start(overrides?: CallOverrides): Promise<[BigNumber]>;
+    start(overrides?: CallOverrides): Promise<[BigNumber]>
 
     transferOwnership(
       newOwner: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<ContractTransaction>;
+    ): Promise<ContractTransaction>
 
-    "vestedAmount(uint64)"(
-      timestamp: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    'vestedAmount(uint64)'(timestamp: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[BigNumber]>
 
-    "vestedAmount(address,uint64)"(
+    'vestedAmount(address,uint64)'(
       token: PromiseOrValue<string>,
       timestamp: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    ): Promise<[BigNumber]>
 
-    vestingManager(overrides?: CallOverrides): Promise<[string]>;
-  };
+    vestingManager(overrides?: CallOverrides): Promise<[string]>
+  }
 
-  beneficiary(overrides?: CallOverrides): Promise<string>;
+  beneficiary(overrides?: CallOverrides): Promise<string>
 
   cancelVesting(
     token: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  ): Promise<ContractTransaction>
 
-  duration(overrides?: CallOverrides): Promise<BigNumber>;
+  duration(overrides?: CallOverrides): Promise<BigNumber>
 
-  owner(overrides?: CallOverrides): Promise<string>;
+  owner(overrides?: CallOverrides): Promise<string>
 
-  "release(address)"(
+  'release(address)'(
     token: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  ): Promise<ContractTransaction>
 
-  "release()"(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  'release()'(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<ContractTransaction>
 
-  "released()"(overrides?: CallOverrides): Promise<BigNumber>;
+  'released()'(overrides?: CallOverrides): Promise<BigNumber>
 
-  "released(address)"(
-    token: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  'released(address)'(token: PromiseOrValue<string>, overrides?: CallOverrides): Promise<BigNumber>
 
-  renounceOwnership(
-    overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<ContractTransaction>
 
-  start(overrides?: CallOverrides): Promise<BigNumber>;
+  start(overrides?: CallOverrides): Promise<BigNumber>
 
   transferOwnership(
     newOwner: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
-  ): Promise<ContractTransaction>;
+  ): Promise<ContractTransaction>
 
-  "vestedAmount(uint64)"(
-    timestamp: PromiseOrValue<BigNumberish>,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  'vestedAmount(uint64)'(timestamp: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>
 
-  "vestedAmount(address,uint64)"(
+  'vestedAmount(address,uint64)'(
     token: PromiseOrValue<string>,
     timestamp: PromiseOrValue<BigNumberish>,
     overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  ): Promise<BigNumber>
 
-  vestingManager(overrides?: CallOverrides): Promise<string>;
+  vestingManager(overrides?: CallOverrides): Promise<string>
 
   callStatic: {
-    beneficiary(overrides?: CallOverrides): Promise<string>;
+    beneficiary(overrides?: CallOverrides): Promise<string>
 
-    cancelVesting(
-      token: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    cancelVesting(token: PromiseOrValue<string>, overrides?: CallOverrides): Promise<void>
 
-    duration(overrides?: CallOverrides): Promise<BigNumber>;
+    duration(overrides?: CallOverrides): Promise<BigNumber>
 
-    owner(overrides?: CallOverrides): Promise<string>;
+    owner(overrides?: CallOverrides): Promise<string>
 
-    "release(address)"(
-      token: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    'release(address)'(token: PromiseOrValue<string>, overrides?: CallOverrides): Promise<void>
 
-    "release()"(overrides?: CallOverrides): Promise<void>;
+    'release()'(overrides?: CallOverrides): Promise<void>
 
-    "released()"(overrides?: CallOverrides): Promise<BigNumber>;
+    'released()'(overrides?: CallOverrides): Promise<BigNumber>
 
-    "released(address)"(
-      token: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    'released(address)'(token: PromiseOrValue<string>, overrides?: CallOverrides): Promise<BigNumber>
 
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
+    renounceOwnership(overrides?: CallOverrides): Promise<void>
 
-    start(overrides?: CallOverrides): Promise<BigNumber>;
+    start(overrides?: CallOverrides): Promise<BigNumber>
 
-    transferOwnership(
-      newOwner: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    transferOwnership(newOwner: PromiseOrValue<string>, overrides?: CallOverrides): Promise<void>
 
-    "vestedAmount(uint64)"(
-      timestamp: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    'vestedAmount(uint64)'(timestamp: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>
 
-    "vestedAmount(address,uint64)"(
+    'vestedAmount(address,uint64)'(
       token: PromiseOrValue<string>,
       timestamp: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    ): Promise<BigNumber>
 
-    vestingManager(overrides?: CallOverrides): Promise<string>;
-  };
+    vestingManager(overrides?: CallOverrides): Promise<string>
+  }
 
   filters: {
-    "ERC20Released(address,uint256)"(
-      token?: PromiseOrValue<string> | null,
-      amount?: null
-    ): ERC20ReleasedEventFilter;
-    ERC20Released(
-      token?: PromiseOrValue<string> | null,
-      amount?: null
-    ): ERC20ReleasedEventFilter;
+    'ERC20Released(address,uint256)'(token?: PromiseOrValue<string> | null, amount?: null): ERC20ReleasedEventFilter
+    ERC20Released(token?: PromiseOrValue<string> | null, amount?: null): ERC20ReleasedEventFilter
 
-    "EtherReleased(uint256)"(amount?: null): EtherReleasedEventFilter;
-    EtherReleased(amount?: null): EtherReleasedEventFilter;
+    'EtherReleased(uint256)'(amount?: null): EtherReleasedEventFilter
+    EtherReleased(amount?: null): EtherReleasedEventFilter
 
-    "OwnershipTransferred(address,address)"(
+    'OwnershipTransferred(address,address)'(
       previousOwner?: PromiseOrValue<string> | null,
       newOwner?: PromiseOrValue<string> | null
-    ): OwnershipTransferredEventFilter;
+    ): OwnershipTransferredEventFilter
     OwnershipTransferred(
       previousOwner?: PromiseOrValue<string> | null,
       newOwner?: PromiseOrValue<string> | null
-    ): OwnershipTransferredEventFilter;
-  };
+    ): OwnershipTransferredEventFilter
+  }
 
   estimateGas: {
-    beneficiary(overrides?: CallOverrides): Promise<BigNumber>;
+    beneficiary(overrides?: CallOverrides): Promise<BigNumber>
 
     cancelVesting(
       token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
+    ): Promise<BigNumber>
 
-    duration(overrides?: CallOverrides): Promise<BigNumber>;
+    duration(overrides?: CallOverrides): Promise<BigNumber>
 
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
+    owner(overrides?: CallOverrides): Promise<BigNumber>
 
-    "release(address)"(
+    'release(address)'(
       token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
+    ): Promise<BigNumber>
 
-    "release()"(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
+    'release()'(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<BigNumber>
 
-    "released()"(overrides?: CallOverrides): Promise<BigNumber>;
+    'released()'(overrides?: CallOverrides): Promise<BigNumber>
 
-    "released(address)"(
-      token: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    'released(address)'(token: PromiseOrValue<string>, overrides?: CallOverrides): Promise<BigNumber>
 
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
+    renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<BigNumber>
 
-    start(overrides?: CallOverrides): Promise<BigNumber>;
+    start(overrides?: CallOverrides): Promise<BigNumber>
 
     transferOwnership(
       newOwner: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<BigNumber>;
+    ): Promise<BigNumber>
 
-    "vestedAmount(uint64)"(
-      timestamp: PromiseOrValue<BigNumberish>,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    'vestedAmount(uint64)'(timestamp: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>
 
-    "vestedAmount(address,uint64)"(
+    'vestedAmount(address,uint64)'(
       token: PromiseOrValue<string>,
       timestamp: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    ): Promise<BigNumber>
 
-    vestingManager(overrides?: CallOverrides): Promise<BigNumber>;
-  };
+    vestingManager(overrides?: CallOverrides): Promise<BigNumber>
+  }
 
   populateTransaction: {
-    beneficiary(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    beneficiary(overrides?: CallOverrides): Promise<PopulatedTransaction>
 
     cancelVesting(
       token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
+    ): Promise<PopulatedTransaction>
 
-    duration(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    duration(overrides?: CallOverrides): Promise<PopulatedTransaction>
 
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>
 
-    "release(address)"(
+    'release(address)'(
       token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
+    ): Promise<PopulatedTransaction>
 
-    "release()"(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
+    'release()'(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<PopulatedTransaction>
 
-    "released()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    'released()'(overrides?: CallOverrides): Promise<PopulatedTransaction>
 
-    "released(address)"(
-      token: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    'released(address)'(token: PromiseOrValue<string>, overrides?: CallOverrides): Promise<PopulatedTransaction>
 
-    renounceOwnership(
-      overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
+    renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<PopulatedTransaction>
 
-    start(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    start(overrides?: CallOverrides): Promise<PopulatedTransaction>
 
     transferOwnership(
       newOwner: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
-    ): Promise<PopulatedTransaction>;
+    ): Promise<PopulatedTransaction>
 
-    "vestedAmount(uint64)"(
+    'vestedAmount(uint64)'(
       timestamp: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    ): Promise<PopulatedTransaction>
 
-    "vestedAmount(address,uint64)"(
+    'vestedAmount(address,uint64)'(
       token: PromiseOrValue<string>,
       timestamp: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
+    ): Promise<PopulatedTransaction>
 
-    vestingManager(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-  };
+    vestingManager(overrides?: CallOverrides): Promise<PopulatedTransaction>
+  }
 }

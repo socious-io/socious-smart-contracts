@@ -1,3 +1,3 @@
-export * from "./deploy";
-export * from "./addToken";
-export * from "./getTokens";
+export * from './deploy'
+export * from './addToken'
+export * from './getTokens'
