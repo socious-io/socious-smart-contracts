@@ -14,6 +14,8 @@ export type { IERC20Metadata } from './@openzeppelin/contracts/token/ERC20/exten
 export { IERC20Metadata__factory } from './factories/@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata__factory'
 export type { IERC20 } from './@openzeppelin/contracts/token/ERC20/IERC20'
 export { IERC20__factory } from './factories/@openzeppelin/contracts/token/ERC20/IERC20__factory'
+export type { Donate } from './contracts/Donate'
+export { Donate__factory } from './factories/contracts/Donate__factory'
 export type { Escrow } from './contracts/Escrow'
 export { Escrow__factory } from './factories/contracts/Escrow__factory'
 export type { MockUSDC } from './contracts/mocks/MockUSDC'

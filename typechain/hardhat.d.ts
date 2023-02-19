@@ -26,6 +26,10 @@ declare module 'hardhat/types/runtime' {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>
     getContractFactory(
+      name: 'Donate',
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Donate__factory>
+    getContractFactory(
       name: 'Escrow',
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Escrow__factory>
@@ -38,6 +42,7 @@ declare module 'hardhat/types/runtime' {
     getContractAt(name: 'ERC20', address: string, signer?: ethers.Signer): Promise<Contracts.ERC20>
     getContractAt(name: 'IERC20Metadata', address: string, signer?: ethers.Signer): Promise<Contracts.IERC20Metadata>
     getContractAt(name: 'IERC20', address: string, signer?: ethers.Signer): Promise<Contracts.IERC20>
+    getContractAt(name: 'Donate', address: string, signer?: ethers.Signer): Promise<Contracts.Donate>
     getContractAt(name: 'Escrow', address: string, signer?: ethers.Signer): Promise<Contracts.Escrow>
     getContractAt(name: 'MockUSDC', address: string, signer?: ethers.Signer): Promise<Contracts.MockUSDC>
 

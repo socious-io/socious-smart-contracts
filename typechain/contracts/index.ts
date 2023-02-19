@@ -3,4 +3,5 @@
 /* eslint-disable */
 import type * as mocks from './mocks'
 export type { mocks }
+export type { Donate } from './Donate'
 export type { Escrow } from './Escrow'

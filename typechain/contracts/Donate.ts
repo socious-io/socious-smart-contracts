@@ -17,93 +17,54 @@ import type { FunctionFragment, Result, EventFragment } from '@ethersproject/abi
 import type { Listener, Provider } from '@ethersproject/providers'
 import type { TypedEventFilter, TypedEvent, TypedListener, OnEvent, PromiseOrValue } from '../common'
 
-export declare namespace Donate {
-  export type OrganizationDataStruct = {
-    sender: PromiseOrValue<string>
-    fullAmmount: PromiseOrValue<BigNumberish>
-    netAmmount: PromiseOrValue<BigNumberish>
-    projectId: PromiseOrValue<BigNumberish>
-  }
-
-  export type OrganizationDataStructOutput = [string, BigNumber, BigNumber, BigNumber] & {
-    sender: string
-    fullAmmount: BigNumber
-    netAmmount: BigNumber
-    projectId: BigNumber
-  }
-
-  export type IndividualDataStruct = {
-    ammount: PromiseOrValue<BigNumberish>
-    projectId: PromiseOrValue<BigNumberish>
-  }
-
-  export type IndividualDataStructOutput = [BigNumber, BigNumber] & {
-    ammount: BigNumber
-    projectId: BigNumber
-  }
-}
-
 export interface DonateInterface extends utils.Interface {
   functions: {
-    'addTokens(address)': FunctionFragment
+    'addToken(address)': FunctionFragment
     'changeFee(uint256)': FunctionFragment
-    'donate(int256,address,uint256,uint256)': FunctionFragment
+    'donate(string,address,uint256,address)': FunctionFragment
     'getFee()': FunctionFragment
-    'getRecievedDonations(address)': FunctionFragment
-    'getSentDonations(address)': FunctionFragment
-    'getToken(uint256)': FunctionFragment
+    'getTokens()': FunctionFragment
     'owner()': FunctionFragment
     'renounceOwnership()': FunctionFragment
-    'tokenInts(uint256)': FunctionFragment
     'transferOwnership(address)': FunctionFragment
+    'validTokens(uint256)': FunctionFragment
   }
 
   getFunction(
     nameOrSignatureOrTopic:
-      | 'addTokens'
+      | 'addToken'
       | 'changeFee'
       | 'donate'
       | 'getFee'
-      | 'getRecievedDonations'
-      | 'getSentDonations'
-      | 'getToken'
+      | 'getTokens'
       | 'owner'
       | 'renounceOwnership'
-      | 'tokenInts'
       | 'transferOwnership'
+      | 'validTokens'
   ): FunctionFragment
 
-  encodeFunctionData(functionFragment: 'addTokens', values: [PromiseOrValue<string>]): string
+  encodeFunctionData(functionFragment: 'addToken', values: [PromiseOrValue<string>]): string
   encodeFunctionData(functionFragment: 'changeFee', values: [PromiseOrValue<BigNumberish>]): string
   encodeFunctionData(
     functionFragment: 'donate',
-    values: [
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<string>,
-      PromiseOrValue<BigNumberish>,
-      PromiseOrValue<BigNumberish>
-    ]
+    values: [PromiseOrValue<string>, PromiseOrValue<string>, PromiseOrValue<BigNumberish>, PromiseOrValue<string>]
   ): string
   encodeFunctionData(functionFragment: 'getFee', values?: undefined): string
-  encodeFunctionData(functionFragment: 'getRecievedDonations', values: [PromiseOrValue<string>]): string
-  encodeFunctionData(functionFragment: 'getSentDonations', values: [PromiseOrValue<string>]): string
-  encodeFunctionData(functionFragment: 'getToken', values: [PromiseOrValue<BigNumberish>]): string
+  encodeFunctionData(functionFragment: 'getTokens', values?: undefined): string
   encodeFunctionData(functionFragment: 'owner', values?: undefined): string
   encodeFunctionData(functionFragment: 'renounceOwnership', values?: undefined): string
-  encodeFunctionData(functionFragment: 'tokenInts', values: [PromiseOrValue<BigNumberish>]): string
   encodeFunctionData(functionFragment: 'transferOwnership', values: [PromiseOrValue<string>]): string
+  encodeFunctionData(functionFragment: 'validTokens', values: [PromiseOrValue<BigNumberish>]): string
 
-  decodeFunctionResult(functionFragment: 'addTokens', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'addToken', data: BytesLike): Result
   decodeFunctionResult(functionFragment: 'changeFee', data: BytesLike): Result
   decodeFunctionResult(functionFragment: 'donate', data: BytesLike): Result
   decodeFunctionResult(functionFragment: 'getFee', data: BytesLike): Result
-  decodeFunctionResult(functionFragment: 'getRecievedDonations', data: BytesLike): Result
-  decodeFunctionResult(functionFragment: 'getSentDonations', data: BytesLike): Result
-  decodeFunctionResult(functionFragment: 'getToken', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'getTokens', data: BytesLike): Result
   decodeFunctionResult(functionFragment: 'owner', data: BytesLike): Result
   decodeFunctionResult(functionFragment: 'renounceOwnership', data: BytesLike): Result
-  decodeFunctionResult(functionFragment: 'tokenInts', data: BytesLike): Result
   decodeFunctionResult(functionFragment: 'transferOwnership', data: BytesLike): Result
+  decodeFunctionResult(functionFragment: 'validTokens', data: BytesLike): Result
 
   events: {
     'Donation(uint256,uint256,address)': EventFragment
@@ -115,8 +76,8 @@ export interface DonateInterface extends utils.Interface {
 }
 
 export interface DonationEventObject {
-  feeAmmount: BigNumber
-  donationAmmount: BigNumber
+  feeamount: BigNumber
+  donationamount: BigNumber
   recieverOrg: string
 }
 export type DonationEvent = TypedEvent<[BigNumber, BigNumber, string], DonationEventObject>
@@ -154,136 +115,106 @@ export interface Donate extends BaseContract {
   removeListener: OnEvent<this>
 
   functions: {
-    addTokens(
-      newToken: PromiseOrValue<string>,
+    addToken(
+      _token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>
 
     changeFee(
-      newFee: PromiseOrValue<BigNumberish>,
+      _newFee: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>
 
     donate(
-      _projectId: PromiseOrValue<BigNumberish>,
+      _jobId: PromiseOrValue<string>,
       _targetAddress: PromiseOrValue<string>,
-      _ammount: PromiseOrValue<BigNumberish>,
-      _token: PromiseOrValue<BigNumberish>,
+      _amount: PromiseOrValue<BigNumberish>,
+      _token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>
 
     getFee(overrides?: CallOverrides): Promise<[BigNumber]>
 
-    getRecievedDonations(
-      _targetAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[Donate.OrganizationDataStructOutput[]]>
-
-    getSentDonations(
-      _targetAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<[Donate.IndividualDataStructOutput[]]>
-
-    getToken(tokenIndex: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[string]>
+    getTokens(overrides?: CallOverrides): Promise<[string[]]>
 
     owner(overrides?: CallOverrides): Promise<[string]>
 
     renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<ContractTransaction>
 
-    tokenInts(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[string]>
-
     transferOwnership(
       newOwner: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>
+
+    validTokens(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<[string]>
   }
 
-  addTokens(
-    newToken: PromiseOrValue<string>,
+  addToken(
+    _token: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>
 
   changeFee(
-    newFee: PromiseOrValue<BigNumberish>,
+    _newFee: PromiseOrValue<BigNumberish>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>
 
   donate(
-    _projectId: PromiseOrValue<BigNumberish>,
+    _jobId: PromiseOrValue<string>,
     _targetAddress: PromiseOrValue<string>,
-    _ammount: PromiseOrValue<BigNumberish>,
-    _token: PromiseOrValue<BigNumberish>,
+    _amount: PromiseOrValue<BigNumberish>,
+    _token: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>
 
   getFee(overrides?: CallOverrides): Promise<BigNumber>
 
-  getRecievedDonations(
-    _targetAddress: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<Donate.OrganizationDataStructOutput[]>
-
-  getSentDonations(
-    _targetAddress: PromiseOrValue<string>,
-    overrides?: CallOverrides
-  ): Promise<Donate.IndividualDataStructOutput[]>
-
-  getToken(tokenIndex: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<string>
+  getTokens(overrides?: CallOverrides): Promise<string[]>
 
   owner(overrides?: CallOverrides): Promise<string>
 
   renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<ContractTransaction>
-
-  tokenInts(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<string>
 
   transferOwnership(
     newOwner: PromiseOrValue<string>,
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>
 
-  callStatic: {
-    addTokens(newToken: PromiseOrValue<string>, overrides?: CallOverrides): Promise<void>
+  validTokens(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<string>
 
-    changeFee(newFee: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<void>
+  callStatic: {
+    addToken(_token: PromiseOrValue<string>, overrides?: CallOverrides): Promise<boolean>
+
+    changeFee(_newFee: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<void>
 
     donate(
-      _projectId: PromiseOrValue<BigNumberish>,
+      _jobId: PromiseOrValue<string>,
       _targetAddress: PromiseOrValue<string>,
-      _ammount: PromiseOrValue<BigNumberish>,
-      _token: PromiseOrValue<BigNumberish>,
+      _amount: PromiseOrValue<BigNumberish>,
+      _token: PromiseOrValue<string>,
       overrides?: CallOverrides
     ): Promise<void>
 
     getFee(overrides?: CallOverrides): Promise<BigNumber>
 
-    getRecievedDonations(
-      _targetAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<Donate.OrganizationDataStructOutput[]>
-
-    getSentDonations(
-      _targetAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<Donate.IndividualDataStructOutput[]>
-
-    getToken(tokenIndex: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<string>
+    getTokens(overrides?: CallOverrides): Promise<string[]>
 
     owner(overrides?: CallOverrides): Promise<string>
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>
 
-    tokenInts(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<string>
-
     transferOwnership(newOwner: PromiseOrValue<string>, overrides?: CallOverrides): Promise<void>
+
+    validTokens(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<string>
   }
 
   filters: {
     'Donation(uint256,uint256,address)'(
-      feeAmmount?: null,
-      donationAmmount?: null,
+      feeamount?: null,
+      donationamount?: null,
       recieverOrg?: null
     ): DonationEventFilter
-    Donation(feeAmmount?: null, donationAmmount?: null, recieverOrg?: null): DonationEventFilter
+    Donation(feeamount?: null, donationamount?: null, recieverOrg?: null): DonationEventFilter
 
     'OwnershipTransferred(address,address)'(
       previousOwner?: PromiseOrValue<string> | null,
@@ -296,83 +227,72 @@ export interface Donate extends BaseContract {
   }
 
   estimateGas: {
-    addTokens(
-      newToken: PromiseOrValue<string>,
+    addToken(
+      _token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>
 
     changeFee(
-      newFee: PromiseOrValue<BigNumberish>,
+      _newFee: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>
 
     donate(
-      _projectId: PromiseOrValue<BigNumberish>,
+      _jobId: PromiseOrValue<string>,
       _targetAddress: PromiseOrValue<string>,
-      _ammount: PromiseOrValue<BigNumberish>,
-      _token: PromiseOrValue<BigNumberish>,
+      _amount: PromiseOrValue<BigNumberish>,
+      _token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>
 
     getFee(overrides?: CallOverrides): Promise<BigNumber>
 
-    getRecievedDonations(_targetAddress: PromiseOrValue<string>, overrides?: CallOverrides): Promise<BigNumber>
-
-    getSentDonations(_targetAddress: PromiseOrValue<string>, overrides?: CallOverrides): Promise<BigNumber>
-
-    getToken(tokenIndex: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>
+    getTokens(overrides?: CallOverrides): Promise<BigNumber>
 
     owner(overrides?: CallOverrides): Promise<BigNumber>
 
     renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<BigNumber>
 
-    tokenInts(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>
-
     transferOwnership(
       newOwner: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>
+
+    validTokens(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<BigNumber>
   }
 
   populateTransaction: {
-    addTokens(
-      newToken: PromiseOrValue<string>,
+    addToken(
+      _token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>
 
     changeFee(
-      newFee: PromiseOrValue<BigNumberish>,
+      _newFee: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>
 
     donate(
-      _projectId: PromiseOrValue<BigNumberish>,
+      _jobId: PromiseOrValue<string>,
       _targetAddress: PromiseOrValue<string>,
-      _ammount: PromiseOrValue<BigNumberish>,
-      _token: PromiseOrValue<BigNumberish>,
+      _amount: PromiseOrValue<BigNumberish>,
+      _token: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>
 
     getFee(overrides?: CallOverrides): Promise<PopulatedTransaction>
 
-    getRecievedDonations(
-      _targetAddress: PromiseOrValue<string>,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>
-
-    getSentDonations(_targetAddress: PromiseOrValue<string>, overrides?: CallOverrides): Promise<PopulatedTransaction>
-
-    getToken(tokenIndex: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<PopulatedTransaction>
+    getTokens(overrides?: CallOverrides): Promise<PopulatedTransaction>
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>
 
     renounceOwnership(overrides?: Overrides & { from?: PromiseOrValue<string> }): Promise<PopulatedTransaction>
 
-    tokenInts(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<PopulatedTransaction>
-
     transferOwnership(
       newOwner: PromiseOrValue<string>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>
+
+    validTokens(arg0: PromiseOrValue<BigNumberish>, overrides?: CallOverrides): Promise<PopulatedTransaction>
   }
 }
