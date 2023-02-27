@@ -167,6 +167,9 @@ contract Escrow is Ownable {
         bool successTransfer = escrow.token.transfer(escrow.contributor, amount);
         require(successTransfer, 'Transfer to contributor failed');
 
+        bool ownerRewardTransfer = escrow.token.transfer(_owner, escrow.fee + fee);
+        require(ownerRewardTransfer, 'Transfer fee to owners failed');
+
         escrowHistory[_escrowId - 1].status = EscrowStatus.COMPELETED;
 
         transactionsHistory[escrow.contributor].push(
@@ -191,6 +194,9 @@ contract Escrow is Ownable {
             bool successTransfer = escrow.token.transfer(escrow.organization, refundAmount);
             require(successTransfer, 'Refund to organization failed');
 
+            bool ownerRewardTransfer = escrow.token.transfer(_owner, fee);
+            require(ownerRewardTransfer, 'Transfer fee to owners failed');
+
             transactionsHistory[escrow.organization].push(
                 TransactionData({ escrowId: _escrowId, amount: refundAmount, fee: fee })
             );
@@ -205,6 +211,9 @@ contract Escrow is Ownable {
 
             bool successTransfer = escrow.token.transfer(escrow.contributor, amount);
             require(successTransfer, 'Transfer to contributor failed');
+
+            bool ownerRewardTransfer = escrow.token.transfer(_owner, escrow.fee + fee);
+            require(ownerRewardTransfer, 'Transfer fee to owners failed');
 
             transactionsHistory[escrow.contributor].push(
                 TransactionData({ escrowId: _escrowId, amount: amount, fee: fee })
