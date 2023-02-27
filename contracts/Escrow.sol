@@ -46,15 +46,7 @@ contract Escrow is Ownable {
     EscrowData[] public escrowHistory;
     mapping(address => TransactionData[]) public transactionsHistory;
 
-    event EscrowAction(
-        uint256 id,
-        uint256 fee,
-        uint256 amount,
-        address organization,
-        address contributer,
-        string jobId,
-        IERC20 token
-    );
+    event EscrowAction(uint256 id, uint256 fee, uint256 amount, address organization, string jobId, IERC20 token);
 
     event TransferAction(uint256 escrowId, address destination, uint256 fee, uint256 amount);
 
@@ -118,7 +110,6 @@ contract Escrow is Ownable {
     /* --------------------- Organization actions  ---------------------------- */
 
     function newEscrow(
-        address _contributor,
         string memory _jobId,
         uint256 _amount,
         bool _verifiedOrg,
@@ -138,7 +129,7 @@ contract Escrow is Ownable {
         escrowHistory.push(
             EscrowData({
                 organization: msg.sender,
-                contributor: _contributor,
+                contributor: msg.sender,
                 jobId: _jobId,
                 amount: _amount,
                 fee: fee,
@@ -149,14 +140,26 @@ contract Escrow is Ownable {
 
         uint256 escrowId = escrowHistory.length;
 
-        emit EscrowAction(escrowId, fee, _amount, msg.sender, _contributor, _jobId, _token);
+        emit EscrowAction(escrowId, fee, _amount, msg.sender, _jobId, _token);
         return escrowId;
+    }
+
+    function setContributor(uint256 _escrowId, address _contributor) public {
+        EscrowData memory escrow = escrowHistory[_escrowId - 1];
+        require(_contributor != escrow.contributor || msg.sender == _contributor, 'Not allow');
+        require(
+            msg.sender == escrow.organization || msg.sender == _owner,
+            'Only the organization allow to set Contributer'
+        );
+
+        escrowHistory[_escrowId - 1].contributor = _contributor;
     }
 
     function withrawn(uint256 _escrowId, bool _verifiedContributer) public {
         EscrowData memory escrow = escrowHistory[_escrowId - 1];
 
         require(escrow.organization == msg.sender, 'Only the organization allow to withrawn escrow');
+        require(escrow.contributor != msg.sender, 'Contributer address is not valid for withrawn');
         require(escrow.status == EscrowStatus.IN_PROGRESS, 'Escrow status is not valid to withrawn');
 
         uint256 fee = _calculatesContFee(escrow.amount, _verifiedContributer);

@@ -54,27 +54,23 @@ describe('Escrow', async () => {
         .to.emit(senderUsdc, 'Approval')
         .withArgs(sender.address, escrowContract.address, data.expectedAmount)
 
-      await expect(
-        await senderEscrow.newEscrow(reciever.address, data.jobId, data.amount, false, mockUsdcContract.address)
-      )
+      await expect(await senderEscrow.newEscrow(data.jobId, data.amount, false, mockUsdcContract.address))
         .to.emit(senderEscrow, 'EscrowAction')
         .withArgs(
           data.escrowId,
           data.expectedEscrowFee,
           data.amount,
           sender.address,
-          reciever.address,
           data.jobId,
           mockUsdcContract.address
         )
+
+      await senderEscrow.setContributor(data.escrowId, reciever.address)
 
       await expect(await senderEscrow.withrawn(data.escrowId, false))
         .to.emit(escrowContract, 'TransferAction')
         .withArgs(data.escrowId, reciever.address, data.expectedWithrawnFee, data.expectedWithrawnAmount)
 
-      expect(JSON.parse(await ownerEscrow.collectIncomeValue(mockUsdcContract.address))).to.equal(13)
-
-      await ownerEscrow.transferAssets(owner.address, mockUsdcContract.address)
       expect(JSON.parse(await mockUsdcContract.balanceOf(owner.address))).to.equal(13)
     })
   })
@@ -90,12 +86,13 @@ describe('Escrow', async () => {
       const ownerEscrow = escrowContract.connect(owner)
 
       await senderUsdc.approve(escrowContract.address, data.expectedAmount)
-      await senderEscrow.newEscrow(reciever.address, data.jobId, data.amount, false, mockUsdcContract.address)
+      await senderEscrow.newEscrow(data.jobId, data.amount, false, mockUsdcContract.address)
+      await senderEscrow.setContributor(data.escrowId, reciever.address)
 
       expect(await ownerEscrow.escrowDecision(data.escrowId, true, false))
         .to.emit(escrowContract, 'TransferAction')
         .withArgs(data.escrowId, sender.address, data.expectedRefundFee, data.expectedRefundAmount)
-      expect(JSON.parse(await ownerEscrow.collectIncomeValue(mockUsdcContract.address))).to.equal(1)
+      expect(JSON.parse(await mockUsdcContract.balanceOf(owner.address))).to.equal(1)
     })
 
     it('Should refund to contributor', async () => {
@@ -108,12 +105,13 @@ describe('Escrow', async () => {
       const ownerEscrow = escrowContract.connect(owner)
 
       await senderUsdc.approve(escrowContract.address, data.expectedAmount)
-      await senderEscrow.newEscrow(reciever.address, data.jobId, data.amount, false, mockUsdcContract.address)
+      await senderEscrow.newEscrow(data.jobId, data.amount, false, mockUsdcContract.address)
+      await senderEscrow.setContributor(data.escrowId, reciever.address)
 
       expect(await ownerEscrow.escrowDecision(data.escrowId, false, false))
         .to.emit(escrowContract, 'TransferAction')
         .withArgs(data.escrowId, sender.address, data.expectedWithrawnFee, data.expectedWithrawnFee)
-      expect(JSON.parse(await ownerEscrow.collectIncomeValue(mockUsdcContract.address))).to.equal(13)
+      expect(JSON.parse(await mockUsdcContract.balanceOf(owner.address))).to.equal(13)
     })
   })
 })
