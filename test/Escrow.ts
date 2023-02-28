@@ -54,7 +54,7 @@ describe('Escrow', async () => {
         .to.emit(senderUsdc, 'Approval')
         .withArgs(sender.address, escrowContract.address, data.expectedAmount)
 
-      await expect(await senderEscrow.newEscrow(data.jobId, data.amount, false, mockUsdcContract.address))
+      await expect(await senderEscrow.newEscrow(sender.address, data.jobId, data.amount, false, mockUsdcContract.address))
         .to.emit(senderEscrow, 'EscrowAction')
         .withArgs(
           data.escrowId,
@@ -86,7 +86,7 @@ describe('Escrow', async () => {
       const ownerEscrow = escrowContract.connect(owner)
 
       await senderUsdc.approve(escrowContract.address, data.expectedAmount)
-      await senderEscrow.newEscrow(data.jobId, data.amount, false, mockUsdcContract.address)
+      await senderEscrow.newEscrow(sender.address, data.jobId, data.amount, false, mockUsdcContract.address)
       await senderEscrow.setContributor(data.escrowId, reciever.address)
 
       expect(await ownerEscrow.escrowDecision(data.escrowId, true, false))
@@ -105,7 +105,7 @@ describe('Escrow', async () => {
       const ownerEscrow = escrowContract.connect(owner)
 
       await senderUsdc.approve(escrowContract.address, data.expectedAmount)
-      await senderEscrow.newEscrow(data.jobId, data.amount, false, mockUsdcContract.address)
+      await senderEscrow.newEscrow(sender.address, data.jobId, data.amount, false, mockUsdcContract.address)
       await senderEscrow.setContributor(data.escrowId, reciever.address)
 
       expect(await ownerEscrow.escrowDecision(data.escrowId, false, false))

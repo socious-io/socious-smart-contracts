@@ -110,6 +110,7 @@ contract Escrow is Ownable {
     /* --------------------- Organization actions  ---------------------------- */
 
     function newEscrow(
+        address _contributor,
         string memory _jobId,
         uint256 _amount,
         bool _verifiedOrg,
@@ -129,7 +130,7 @@ contract Escrow is Ownable {
         escrowHistory.push(
             EscrowData({
                 organization: msg.sender,
-                contributor: msg.sender,
+                contributor: _contributor,
                 jobId: _jobId,
                 amount: _amount,
                 fee: fee,
@@ -146,7 +147,7 @@ contract Escrow is Ownable {
 
     function setContributor(uint256 _escrowId, address _contributor) public {
         EscrowData memory escrow = escrowHistory[_escrowId - 1];
-        require(_contributor != escrow.contributor || msg.sender == _contributor, 'Not allow');
+        require(_contributor != escrow.contributor || msg.sender == escrow.contributor, 'Not allow');
         require(
             msg.sender == escrow.organization || msg.sender == _owner,
             'Only the organization allow to set Contributer'
