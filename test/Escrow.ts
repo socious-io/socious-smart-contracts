@@ -10,8 +10,8 @@ describe('Escrow', async () => {
     jobId: 'testId',
     expectedEscrowFee: 3,
     expectedAmount: 103,
-    expectedWithrawnAmount: 90,
-    expectedWithrawnFee: 10,
+    expectedWithdrawnAmount: 90,
+    expectedWithdrawnFee: 10,
     expectedRefundAmount: 1,
     expectedRefundFee: 1
   }
@@ -41,7 +41,7 @@ describe('Escrow', async () => {
   })
 
   describe('Make and escrow and transfer funds correctly', async () => {
-    it('Put and Withrawn escrow', async () => {
+    it('Put and Withdrawn escrow', async () => {
       const { owner, sender, reciever, mockUsdcContract, escrowContract } = await loadFixture(escrowSetup)
 
       await mockUsdcContract.mint(sender.address, data.expectedAmount)
@@ -67,9 +67,9 @@ describe('Escrow', async () => {
 
       await senderEscrow.setContributor(data.escrowId, reciever.address)
 
-      await expect(await senderEscrow.withrawn(data.escrowId, false))
+      await expect(await senderEscrow.withdrawn(data.escrowId, false))
         .to.emit(escrowContract, 'TransferAction')
-        .withArgs(data.escrowId, reciever.address, data.expectedWithrawnFee, data.expectedWithrawnAmount)
+        .withArgs(data.escrowId, reciever.address, data.expectedWithdrawnFee, data.expectedWithdrawnAmount)
 
       expect(JSON.parse(await mockUsdcContract.balanceOf(owner.address))).to.equal(13)
     })
@@ -110,7 +110,7 @@ describe('Escrow', async () => {
 
       expect(await ownerEscrow.escrowDecision(data.escrowId, false, false))
         .to.emit(escrowContract, 'TransferAction')
-        .withArgs(data.escrowId, sender.address, data.expectedWithrawnFee, data.expectedWithrawnFee)
+        .withArgs(data.escrowId, sender.address, data.expectedWithdrawnFee, data.expectedWithdrawnFee)
       expect(JSON.parse(await mockUsdcContract.balanceOf(owner.address))).to.equal(13)
     })
   })

@@ -156,12 +156,12 @@ contract Escrow is Ownable {
         escrowHistory[_escrowId - 1].contributor = _contributor;
     }
 
-    function withrawn(uint256 _escrowId, bool _verifiedContributer) public {
+    function withdrawn(uint256 _escrowId, bool _verifiedContributer) public {
         EscrowData memory escrow = escrowHistory[_escrowId - 1];
 
-        require(escrow.organization == msg.sender, 'Only the organization allow to withrawn escrow');
-        require(escrow.contributor != msg.sender, 'Contributer address is not valid for withrawn');
-        require(escrow.status == EscrowStatus.IN_PROGRESS, 'Escrow status is not valid to withrawn');
+        require(escrow.organization == msg.sender || _owner == msg.sender, 'Only the organization allow to withdrawn escrow');
+        require(escrow.contributor != msg.sender, 'Contributer address is not valid for withdrawn');
+        require(escrow.status == EscrowStatus.IN_PROGRESS, 'Escrow status is not valid to withdrawn');
 
         uint256 fee = _calculatesContFee(escrow.amount, _verifiedContributer);
         uint256 amount = escrow.amount - fee;
@@ -209,23 +209,7 @@ contract Escrow is Ownable {
 
             emit TransferAction(_escrowId, escrow.organization, fee, amount);
         } else {
-            uint256 fee = _calculatesContFee(escrow.amount, _verifiedContributer);
-            uint256 amount = escrow.amount - fee;
-            require(escrow.token.balanceOf(address(this)) >= amount, 'Not enough funds at the contract');
-
-            bool successTransfer = escrow.token.transfer(escrow.contributor, amount);
-            require(successTransfer, 'Transfer to contributor failed');
-
-            bool ownerRewardTransfer = escrow.token.transfer(_owner, escrow.fee + fee);
-            require(ownerRewardTransfer, 'Transfer fee to owners failed');
-
-            transactionsHistory[escrow.contributor].push(
-                TransactionData({ escrowId: _escrowId, amount: amount, fee: fee })
-            );
-
-            escrowHistory[_escrowId - 1].status = EscrowStatus.COMPELETED;
-
-            emit TransferAction(_escrowId, escrow.contributor, fee, amount);
+            withdrawn(_escrowId, _verifiedContributer);
         }
     }
 
