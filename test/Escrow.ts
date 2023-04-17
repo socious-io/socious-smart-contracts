@@ -20,7 +20,7 @@ describe('Escrow', async () => {
     const MockUSDC = await artifacts.readArtifact('MockUSDC')
     const EscrowArtifact = await artifacts.readArtifact('Escrow')
 
-    const [owner, sender, reciever] = await ethers.getSigners()
+    const [owner, sender, reciever, newOwner] = await ethers.getSigners()
 
     const mockUsdcFactory = new ethers.ContractFactory(MockUSDC.abi, MockUSDC.bytecode, owner)
     const mockUsdcContract = await mockUsdcFactory.deploy()
@@ -29,7 +29,7 @@ describe('Escrow', async () => {
 
     await escrowContract.addToken(mockUsdcContract.address)
 
-    return { owner, sender, reciever, mockUsdcContract, escrowContract }
+    return { owner, sender, reciever, newOwner, mockUsdcContract, escrowContract }
   }
 
   describe('Validate token interface from Escrow', async () => {
@@ -42,13 +42,15 @@ describe('Escrow', async () => {
 
   describe('Make and escrow and transfer funds correctly', async () => {
     it('Put and Withdrawn escrow', async () => {
-      const { owner, sender, reciever, mockUsdcContract, escrowContract } = await loadFixture(escrowSetup)
+      const { owner, sender, reciever, newOwner, mockUsdcContract, escrowContract } = await loadFixture(escrowSetup)
 
       await mockUsdcContract.mint(sender.address, data.expectedAmount)
 
       const senderUsdc = mockUsdcContract.connect(sender)
       const senderEscrow = escrowContract.connect(sender)
       const ownerEscrow = escrowContract.connect(owner)
+
+      await ownerEscrow.transferOwnership(newOwner.address)
 
       await expect(await senderUsdc.approve(escrowContract.address, data.expectedAmount))
         .to.emit(senderUsdc, 'Approval')
@@ -70,8 +72,9 @@ describe('Escrow', async () => {
       await expect(await senderEscrow.withdrawn(data.escrowId, false))
         .to.emit(escrowContract, 'TransferAction')
         .withArgs(data.escrowId, reciever.address, data.expectedWithdrawnFee, data.expectedWithdrawnAmount)
-
-      expect(JSON.parse(await mockUsdcContract.balanceOf(owner.address))).to.equal(13)
+      
+      console.log(JSON.parse(await mockUsdcContract.balanceOf(owner.address)))
+      expect(JSON.parse(await mockUsdcContract.balanceOf(newOwner.address))).to.equal(13)
     })
   })
 

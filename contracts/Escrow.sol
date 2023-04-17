@@ -5,7 +5,6 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/interfaces/IERC20.sol';
 
 contract Escrow is Ownable {
-    address payable private _owner;
 
     string public version = '0.1.0';
 
@@ -52,7 +51,6 @@ contract Escrow is Ownable {
 
     constructor() {
         address msgSender = _msgSender();
-        _owner = payable(msgSender); // Set the contract creator
         emit OwnershipTransferred(address(0), msgSender);
     }
 
@@ -149,7 +147,7 @@ contract Escrow is Ownable {
         EscrowData memory escrow = escrowHistory[_escrowId - 1];
         require(_contributor != escrow.contributor || msg.sender == escrow.contributor, 'Not allow');
         require(
-            msg.sender == escrow.organization || msg.sender == _owner,
+            msg.sender == escrow.organization || msg.sender == owner(),
             'Only the organization allow to set Contributer'
         );
 
@@ -159,8 +157,7 @@ contract Escrow is Ownable {
     function withdrawn(uint256 _escrowId, bool _verifiedContributer) public {
         EscrowData memory escrow = escrowHistory[_escrowId - 1];
 
-        require(escrow.organization == msg.sender || _owner == msg.sender, 'Only the organization allow to withdrawn escrow');
-        require(escrow.contributor != msg.sender, 'Contributer address is not valid for withdrawn');
+        require(escrow.organization == msg.sender || owner() == msg.sender, 'Only the organization allow to withdrawn escrow');
         require(escrow.status == EscrowStatus.IN_PROGRESS, 'Escrow status is not valid to withdrawn');
 
         uint256 fee = _calculatesContFee(escrow.amount, _verifiedContributer);
@@ -171,7 +168,7 @@ contract Escrow is Ownable {
         bool successTransfer = escrow.token.transfer(escrow.contributor, amount);
         require(successTransfer, 'Transfer to contributor failed');
 
-        bool ownerRewardTransfer = escrow.token.transfer(_owner, escrow.fee + fee);
+        bool ownerRewardTransfer = escrow.token.transfer(owner(), escrow.fee + fee);
         require(ownerRewardTransfer, 'Transfer fee to owners failed');
 
         escrowHistory[_escrowId - 1].status = EscrowStatus.COMPELETED;
@@ -198,7 +195,7 @@ contract Escrow is Ownable {
             bool successTransfer = escrow.token.transfer(escrow.organization, refundAmount);
             require(successTransfer, 'Refund to organization failed');
 
-            bool ownerRewardTransfer = escrow.token.transfer(_owner, fee);
+            bool ownerRewardTransfer = escrow.token.transfer(owner(), fee);
             require(ownerRewardTransfer, 'Transfer fee to owners failed');
 
             transactionsHistory[escrow.organization].push(
