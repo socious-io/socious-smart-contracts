@@ -31,6 +31,7 @@ contract Escrow is Ownable {
         string jobId;
         uint amount; // Escrow amount value
         uint fee; // Fee cost for escrow amount already taken
+        bool verifiedOrg;
         EscrowStatus status;
         IERC20 token;
     }
@@ -133,7 +134,8 @@ contract Escrow is Ownable {
                 amount: _amount,
                 fee: fee,
                 token: _token,
-                status: EscrowStatus.IN_PROGRESS
+                status: EscrowStatus.IN_PROGRESS,
+                verifiedOrg: _verifiedOrg
             })
         );
 
@@ -154,13 +156,14 @@ contract Escrow is Ownable {
         escrowHistory[_escrowId - 1].contributor = _contributor;
     }
 
-    function withdrawn(uint256 _escrowId, bool _verifiedContributer) public {
+    function withdrawn(uint256 _escrowId) public {
         EscrowData memory escrow = escrowHistory[_escrowId - 1];
 
         require(escrow.organization == msg.sender || owner() == msg.sender, 'Only the organization allow to withdrawn escrow');
         require(escrow.status == EscrowStatus.IN_PROGRESS, 'Escrow status is not valid to withdrawn');
 
-        uint256 fee = _calculatesContFee(escrow.amount, _verifiedContributer);
+
+        uint256 fee = _calculatesContFee(escrow.amount, escrow.verifiedOrg);
         uint256 amount = escrow.amount - fee;
 
         require(escrow.token.balanceOf(address(this)) >= amount, 'Not enough funds at the contract');
@@ -182,7 +185,7 @@ contract Escrow is Ownable {
 
     /* --------------------- Admin actions ---------------------------- */
 
-    function escrowDecision(uint256 _escrowId, bool _refund, bool _verifiedContributer) public onlyOwner {
+    function escrowDecision(uint256 _escrowId, bool _refund) public onlyOwner {
         EscrowData memory escrow = escrowHistory[_escrowId - 1];
         require(escrow.status == EscrowStatus.IN_PROGRESS, 'Escrow status is not valid for decision');
         if (_refund) {
@@ -206,7 +209,7 @@ contract Escrow is Ownable {
 
             emit TransferAction(_escrowId, escrow.organization, fee, amount);
         } else {
-            withdrawn(_escrowId, _verifiedContributer);
+            withdrawn(_escrowId);
         }
     }
 
@@ -274,6 +277,7 @@ contract Escrow is Ownable {
         string memory _jobId,
         uint _amount,
         uint _fee,
+        bool _verifiedOrg,
         EscrowStatus _status,
         IERC20 _token
     ) public onlyOwner returns (uint256) {
@@ -285,6 +289,7 @@ contract Escrow is Ownable {
                 amount: _amount,
                 fee: _fee,
                 status: _status,
+                verifiedOrg: _verifiedOrg,
                 token: _token
             })
         );
