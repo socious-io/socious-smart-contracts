@@ -5,7 +5,6 @@ import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/interfaces/IERC20.sol';
 
 contract Escrow is Ownable {
-
     string public version = '0.1.0';
 
     IERC20[] public validTokens;
@@ -159,9 +158,11 @@ contract Escrow is Ownable {
     function withdrawn(uint256 _escrowId) public {
         EscrowData memory escrow = escrowHistory[_escrowId - 1];
 
-        require(escrow.organization == msg.sender || owner() == msg.sender, 'Only the organization allow to withdrawn escrow');
+        require(
+            escrow.organization == msg.sender || owner() == msg.sender,
+            'Only the organization allow to withdrawn escrow'
+        );
         require(escrow.status == EscrowStatus.IN_PROGRESS, 'Escrow status is not valid to withdrawn');
-
 
         uint256 fee = _calculatesContFee(escrow.amount, escrow.verifiedOrg);
         uint256 amount = escrow.amount - fee;

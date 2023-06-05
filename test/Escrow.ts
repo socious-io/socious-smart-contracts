@@ -56,7 +56,9 @@ describe('Escrow', async () => {
         .to.emit(senderUsdc, 'Approval')
         .withArgs(sender.address, escrowContract.address, data.expectedAmount)
 
-      await expect(await senderEscrow.newEscrow(sender.address, data.jobId, data.amount, false, mockUsdcContract.address))
+      await expect(
+        await senderEscrow.newEscrow(sender.address, data.jobId, data.amount, false, mockUsdcContract.address)
+      )
         .to.emit(senderEscrow, 'EscrowAction')
         .withArgs(
           data.escrowId,
@@ -72,7 +74,7 @@ describe('Escrow', async () => {
       await expect(await senderEscrow.withdrawn(data.escrowId))
         .to.emit(escrowContract, 'TransferAction')
         .withArgs(data.escrowId, reciever.address, data.expectedWithdrawnFee, data.expectedWithdrawnAmount)
-      
+
       expect(JSON.parse(await mockUsdcContract.balanceOf(newOwner.address))).to.equal(13)
     })
   })
