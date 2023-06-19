@@ -9,9 +9,6 @@ contract Lending is Ownable {
 
     IERC20[] public validTokens;
 
-    uint private payoutFee = 1;
-    uint private decisionFee = 1;
-
     enum Status {
         IN_PROGRESS,
         COMPELETED,
@@ -24,6 +21,7 @@ contract Lending is Ownable {
         string id;
         address owner;
         uint256 goalAmount;
+        uint256 repaymentPeriod;
         Status status;
         IERC20 token;
     }
@@ -37,9 +35,24 @@ contract Lending is Ownable {
     struct BorrowData {
         string projectId;
         address borrower;
-        uint amount;
+        uint256 amount;
+    }
+    
+    struct LenderPaybackData {
+        string projectId;
+       address lenderAddress;
+       uint256 amount;
+       uint256 fee;
     }
 
+    struct RepaymentData {
+      string projectId;
+      uint256 amount;
+      uint256 fee;
+    }
+
+    RepaymentData[] public repayments;
+    LenderPaybackData[] public lendersPaybacks;
     Project[] public projects;
     LoanData[] public lendingHistory;
     BorrowData[] public borrowHistory;
@@ -47,6 +60,7 @@ contract Lending is Ownable {
     event LoanAction(uint256 amount, string projectId, address lenderAddress);
     event BorrowAction(string projectId, address borrower, uint256 amount);
     event ProjectCreateAction(string projectId, address owner, uint256 goalAmount, IERC20 token);
+    event RepaymentAction(string projectId, uint256 amount, uint256 fee);
 
     constructor() {
         address msgSender = _msgSender();
@@ -65,7 +79,7 @@ contract Lending is Ownable {
 
     /* --------------------- Public actions  ---------------------------- */
 
-    function createProject(string memory _projectId, uint256 _goalAmount, IERC20 _token) public {
+    function createProject(string memory _projectId, uint256 _goalAmount, uint256 _repaymentPeriod, IERC20 _token) public {
         int index = _projectExists(_projectId);
         require(index < 0, 'Project already exists');
 
@@ -73,6 +87,7 @@ contract Lending is Ownable {
             Project({
                 id: _projectId,
                 goalAmount: _goalAmount,
+                repaymentPeriod: _repaymentPeriod,
                 owner: msg.sender,
                 token: _token,
                 status: Status.IN_PROGRESS
@@ -121,6 +136,60 @@ contract Lending is Ownable {
         emit BorrowAction(_projectId, msg.sender, totalAmount);
     }
 
+    function repayment(string memory _projectId) public {
+      int index = _projectExists(_projectId);
+      require(index >= 0, 'Project not exists');
+      
+      uint i = uint(index);
+
+      require(projects[i].status == Status.COMPELETED, 'Project status is not valid for this action');
+
+
+      uint256 origin = projects[i].goalAmount / projects[i].repaymentPeriod;
+      uint256 ownerFee = origin * 65 / 10000;
+      uint256 fee = origin * 13 / 1000;
+      uint256 amount = origin + fee;
+
+      require(projects[i].token.balanceOf(msg.sender) >= amount, 'Not enough funds');
+      require(projects[i].token.allowance(msg.sender, address(this)) >= amount, 'Not enough allowance');
+
+
+      bool successLock = projects[i].token.transferFrom(msg.sender, address(this), amount);
+      require(successLock, 'Funds lockment failed!');
+
+
+      bool ownerRewardTransfer = projects[i].token.transfer(owner(), ownerFee);
+      require(ownerRewardTransfer, 'Transfer fee to owners failed');
+      
+      repayments.push(RepaymentData({
+        projectId: _projectId,
+        amount: amount,
+        fee: fee
+      }));
+      
+
+      for (uint j = 0; j < lendingHistory.length; j++) {
+        if (keccak256(abi.encodePacked(lendingHistory[j].projectId)) == keccak256(abi.encodePacked(_projectId))) {
+          
+          uint256 lenderOrigin = lendingHistory[j].amount / projects[i].repaymentPeriod;
+          uint256 lenderFee = lenderOrigin * 65 / 10000;
+          uint256 paybackAmount = lenderOrigin + lenderFee;
+          
+          bool paybackTransfer = projects[i].token.transfer(lendingHistory[j].lenderAddress, paybackAmount);
+          require(paybackTransfer, 'Transfer to lender failed');
+          
+          lendersPaybacks.push(LenderPaybackData({
+            projectId: lendingHistory[j].projectId,
+            amount: paybackAmount,
+            lenderAddress: lendingHistory[j].lenderAddress,
+            fee: lenderFee
+          }));
+        }
+      }
+
+      emit RepaymentAction(_projectId, amount, fee);
+    }
+
     /* ------------------------ Internals ----------------------------- */
 
     function _lendedAmount(string memory _projectId) internal view returns (uint256) {
@@ -149,5 +218,15 @@ contract Lending is Ownable {
             }
         }
         return false;
+    }
+
+    function _lendersCount(string memory _projectId) internal view returns (uint) {
+      uint count = 0;
+      for (uint j = 0; j < lendingHistory.length; j++) {
+        if (keccak256(abi.encodePacked(lendingHistory[j].projectId)) == keccak256(abi.encodePacked(_projectId))) {
+          count++;
+        }
+      }
+      return count;
     }
 }
