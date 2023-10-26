@@ -5,7 +5,7 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 describe('Escrow', async () => {
   const data = {
-    escrowId: 1,
+    escrowId: 0,
     amount: 100,
     jobId: 'testId',
     expectedEscrowFee: 3,
@@ -24,10 +24,11 @@ describe('Escrow', async () => {
 
     const mockUsdcFactory = new ethers.ContractFactory(MockUSDC.abi, MockUSDC.bytecode, owner)
     const mockUsdcContract = await mockUsdcFactory.deploy()
+
     const escrowFactory = new ethers.ContractFactory(EscrowArtifact.abi, EscrowArtifact.bytecode, owner)
     const escrowContract = await escrowFactory.deploy()
 
-    await escrowContract.addToken(mockUsdcContract.address)
+    await escrowContract.addToken(mockUsdcContract.address, { gasLimit: 5000000 })
 
     return { owner, sender, reciever, newOwner, mockUsdcContract, escrowContract }
   }
@@ -35,8 +36,7 @@ describe('Escrow', async () => {
   describe('Validate token interface from Escrow', async () => {
     it('Should bring the properties from the token', async () => {
       const { mockUsdcContract, escrowContract } = await loadFixture(escrowSetup)
-
-      expect((await escrowContract.getTokens())[0]).to.equal(mockUsdcContract.address)
+      expect(await escrowContract.validTokens(0)).to.equal(mockUsdcContract.address)
     })
   })
 
@@ -50,14 +50,14 @@ describe('Escrow', async () => {
       const senderEscrow = escrowContract.connect(sender)
       const ownerEscrow = escrowContract.connect(owner)
 
-      await ownerEscrow.transferOwnership(newOwner.address)
+      await ownerEscrow.setBeneficiary(newOwner.address)
 
       await expect(await senderUsdc.approve(escrowContract.address, data.expectedAmount))
         .to.emit(senderUsdc, 'Approval')
         .withArgs(sender.address, escrowContract.address, data.expectedAmount)
 
       await expect(
-        await senderEscrow.newEscrow(sender.address, data.jobId, data.amount, false, mockUsdcContract.address)
+        await senderEscrow.newEscrow(reciever.address, data.jobId, data.amount, false, mockUsdcContract.address)
       )
         .to.emit(senderEscrow, 'EscrowAction')
         .withArgs(
@@ -68,13 +68,9 @@ describe('Escrow', async () => {
           data.jobId,
           mockUsdcContract.address
         )
-
-      await senderEscrow.setContributor(data.escrowId, reciever.address)
-
       await expect(await senderEscrow.withdrawn(data.escrowId))
         .to.emit(escrowContract, 'TransferAction')
         .withArgs(data.escrowId, reciever.address, data.expectedWithdrawnFee, data.expectedWithdrawnAmount)
-
       expect(JSON.parse(await mockUsdcContract.balanceOf(newOwner.address))).to.equal(13)
     })
   })

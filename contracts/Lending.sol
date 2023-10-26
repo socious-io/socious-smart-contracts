@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.20;
 
 import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/interfaces/IERC20.sol';
 
-contract Lending is Ownable {
+contract Lending is Ownable(msg.sender) {
     string public version = '0.1.0';
 
     IERC20[] public validTokens;

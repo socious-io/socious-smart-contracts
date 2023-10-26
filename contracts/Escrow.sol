@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.20;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
 import '@openzeppelin/contracts/interfaces/IERC20.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
 
-contract Escrow is Ownable {
-    string public version = '0.1.0';
+contract Escrow is Ownable(msg.sender) {
+    string public version;
+    address public beneficiaryAddress;
+    mapping(uint256 => IERC20) public validTokens;
+    uint256 public tokensLength;
 
-    IERC20[] public validTokens;
-
-    uint private noImpactContFee = 10;
-    uint private impactContFee = 5;
-    uint private noImpactOrgFee = 3;
-    uint private impactOrgFee = 2;
-    uint private decisionRetentionFee = 1;
+    uint private noImpactContFee;
+    uint private impactContFee;
+    uint private noImpactOrgFee;
+    uint private impactOrgFee;
+    uint private decisionRetentionFee;
 
     enum EscrowStatus {
         IN_PROGRESS,
@@ -42,17 +43,29 @@ contract Escrow is Ownable {
         uint fee; // Fee cost for transaction
     }
 
-    EscrowData[] public escrowHistory;
+    mapping(uint256 => EscrowData) public escrowHistory;
+    uint256 public escrowHistoryLength;
     mapping(address => TransactionData[]) public transactionsHistory;
 
     event EscrowAction(uint256 id, uint256 fee, uint256 amount, address organization, string jobId, IERC20 token);
 
     event TransferAction(uint256 escrowId, address destination, uint256 fee, uint256 amount);
 
+    
     constructor() {
-        address msgSender = _msgSender();
-        emit OwnershipTransferred(address(0), msgSender);
+        
+        version = '0.1.0';
+        noImpactContFee = 10;
+        impactContFee = 5;
+        noImpactOrgFee = 3;
+        impactOrgFee = 2;
+        decisionRetentionFee = 1;
+        escrowHistoryLength = 0;
+        tokensLength = 0;
+
+        beneficiaryAddress = msg.sender;
     }
+
 
     /* --------------------- Public actions  ---------------------------- */
 
@@ -77,32 +90,28 @@ contract Escrow is Ownable {
     }
 
     function getEscrow(uint256 _escrowId) public view returns (EscrowData memory) {
-        EscrowData memory escrow = escrowHistory[_escrowId - 1];
+        EscrowData memory escrow = escrowHistory[_escrowId];
         return escrow;
     }
 
     function getEscrowId(
-        address _organization,
-        address _contributor,
-        string memory _jobId,
-        uint256 _amount
+      address _organization,
+      address _contributor,
+      string memory _jobId,
+      uint256 _amount
     ) public view returns (uint256) {
-        for (uint i; i < escrowHistory.length; i++) {
-            if (
-                escrowHistory[i].organization == _organization &&
-                escrowHistory[i].contributor == _contributor &&
-                keccak256(abi.encodePacked(escrowHistory[i].jobId)) == keccak256(abi.encodePacked(_jobId)) &&
-                escrowHistory[i].amount == _amount
-            ) {
-                return i + 1;
-            }
+    for (uint i; i < escrowHistoryLength; i++) {
+        if (
+            escrowHistory[i].organization == _organization &&
+            escrowHistory[i].contributor == _contributor &&
+            keccak256(bytes(escrowHistory[i].jobId)) == keccak256(bytes(_jobId)) &&
+            escrowHistory[i].amount == _amount
+        ) {
+            return i + 1;
         }
-        require(false, 'Escrow not found');
-        return 0;
     }
-
-    function getTokens() public view onlyOwner returns (IERC20[] memory) {
-        return validTokens;
+    require(false, 'Escrow not found');
+    return 0;
     }
 
     /* --------------------- Organization actions  ---------------------------- */
@@ -125,8 +134,7 @@ contract Escrow is Ownable {
         bool successLock = _token.transferFrom(msg.sender, address(this), totalAmount);
         require(successLock, 'Funds lockment failed!');
 
-        escrowHistory.push(
-            EscrowData({
+        escrowHistory[escrowHistoryLength] = EscrowData({
                 organization: msg.sender,
                 contributor: _contributor,
                 jobId: _jobId,
@@ -135,28 +143,29 @@ contract Escrow is Ownable {
                 token: _token,
                 status: EscrowStatus.IN_PROGRESS,
                 verifiedOrg: _verifiedOrg
-            })
-        );
+            });
+            
 
-        uint256 escrowId = escrowHistory.length;
+        uint256 escrowId = escrowHistoryLength;
+        escrowHistoryLength++;
 
         emit EscrowAction(escrowId, fee, _amount, msg.sender, _jobId, _token);
         return escrowId;
     }
 
     function setContributor(uint256 _escrowId, address _contributor) public {
-        EscrowData memory escrow = escrowHistory[_escrowId - 1];
+        EscrowData memory escrow = escrowHistory[_escrowId];
         require(_contributor != escrow.contributor || msg.sender == escrow.contributor, 'Not allow');
         require(
             msg.sender == escrow.organization || msg.sender == owner(),
             'Only the organization allow to set Contributer'
         );
 
-        escrowHistory[_escrowId - 1].contributor = _contributor;
+        escrowHistory[_escrowId].contributor = _contributor;
     }
 
     function withdrawn(uint256 _escrowId) public {
-        EscrowData memory escrow = escrowHistory[_escrowId - 1];
+        EscrowData memory escrow = escrowHistory[_escrowId];
 
         require(
             escrow.organization == msg.sender || owner() == msg.sender,
@@ -172,10 +181,10 @@ contract Escrow is Ownable {
         bool successTransfer = escrow.token.transfer(escrow.contributor, amount);
         require(successTransfer, 'Transfer to contributor failed');
 
-        bool ownerRewardTransfer = escrow.token.transfer(owner(), escrow.fee + fee);
+        bool ownerRewardTransfer = escrow.token.transfer(beneficiaryAddress, escrow.fee + fee);
         require(ownerRewardTransfer, 'Transfer fee to owners failed');
 
-        escrowHistory[_escrowId - 1].status = EscrowStatus.COMPELETED;
+        escrowHistory[_escrowId].status = EscrowStatus.COMPELETED;
 
         transactionsHistory[escrow.contributor].push(
             TransactionData({ escrowId: _escrowId, amount: amount, fee: fee })
@@ -187,7 +196,7 @@ contract Escrow is Ownable {
     /* --------------------- Admin actions ---------------------------- */
 
     function escrowDecision(uint256 _escrowId, bool _refund) public onlyOwner {
-        EscrowData memory escrow = escrowHistory[_escrowId - 1];
+        EscrowData memory escrow = escrowHistory[_escrowId];
         require(escrow.status == EscrowStatus.IN_PROGRESS, 'Escrow status is not valid for decision');
         if (_refund) {
             uint256 amount = escrow.amount + escrow.fee;
@@ -199,20 +208,26 @@ contract Escrow is Ownable {
             bool successTransfer = escrow.token.transfer(escrow.organization, refundAmount);
             require(successTransfer, 'Refund to organization failed');
 
-            bool ownerRewardTransfer = escrow.token.transfer(owner(), fee);
+            bool ownerRewardTransfer = escrow.token.transfer(beneficiaryAddress, fee);
             require(ownerRewardTransfer, 'Transfer fee to owners failed');
 
             transactionsHistory[escrow.organization].push(
                 TransactionData({ escrowId: _escrowId, amount: refundAmount, fee: fee })
             );
 
-            escrowHistory[_escrowId - 1].status = EscrowStatus.CANCELED;
+            escrowHistory[_escrowId].status = EscrowStatus.CANCELED;
 
             emit TransferAction(_escrowId, escrow.organization, fee, amount);
         } else {
             withdrawn(_escrowId);
         }
     }
+
+
+    function setBeneficiary (address _address) public onlyOwner {
+        beneficiaryAddress = _address;
+    }
+
 
     function setNoImpactContFee(uint _newFee) public onlyOwner {
         require(_newFee != getNoImpactContFee());
@@ -244,7 +259,8 @@ contract Escrow is Ownable {
             return false;
         }
 
-        validTokens.push(_token);
+        validTokens[tokensLength] = _token;
+        tokensLength++;
         return true;
     }
 
@@ -252,7 +268,7 @@ contract Escrow is Ownable {
     function collectIncomeValue(IERC20 _token) public view onlyOwner returns (uint256) {
         uint256 balance = _token.balanceOf(address(this));
         uint256 totalAmount = 0;
-        for (uint i = 0; i < escrowHistory.length; i++) {
+        for (uint i = 0; i < escrowHistoryLength; i++) {
             if (escrowHistory[i].status == EscrowStatus.IN_PROGRESS) {
                 totalAmount += escrowHistory[i].amount;
             }
@@ -272,32 +288,6 @@ contract Escrow is Ownable {
         require(success, 'Transfer failed');
     }
 
-    function addEscrowData(
-        address _organization,
-        address _contributor,
-        string memory _jobId,
-        uint _amount,
-        uint _fee,
-        bool _verifiedOrg,
-        EscrowStatus _status,
-        IERC20 _token
-    ) public onlyOwner returns (uint256) {
-        escrowHistory.push(
-            EscrowData({
-                organization: _organization,
-                contributor: _contributor,
-                jobId: _jobId,
-                amount: _amount,
-                fee: _fee,
-                status: _status,
-                verifiedOrg: _verifiedOrg,
-                token: _token
-            })
-        );
-
-        return escrowHistory.length - 1;
-    }
-
     /* ------------------------ Internals ----------------------------- */
     function _calculatesOrgFee(uint256 _value, bool _verified) internal view returns (uint256) {
         uint _fee = noImpactOrgFee;
@@ -314,7 +304,7 @@ contract Escrow is Ownable {
     }
 
     function _tokenExists(IERC20 _token) internal view returns (bool) {
-        for (uint i = 0; i < validTokens.length; i++) {
+        for (uint i = 0; i < tokensLength; i++) {
             if (validTokens[i] == _token) {
                 return true;
             }
