@@ -89,7 +89,7 @@ contract Escrow is Ownable(msg.sender) {
         return decisionRetentionFee;
     }
 
-    function getEscrow(uint256 _escrowId) public view returns (EscrowData memory) {
+    function getEscrow(uint256 _escrowId) external view returns (EscrowData memory) {
         EscrowData memory escrow = escrowHistory[_escrowId];
         return escrow;
     }
@@ -99,7 +99,7 @@ contract Escrow is Ownable(msg.sender) {
       address _contributor,
       string memory _jobId,
       uint256 _amount
-    ) public view returns (uint256) {
+    ) external view returns (uint256) {
     for (uint i; i < escrowHistoryLength; i++) {
         if (
             escrowHistory[i].organization == _organization &&
@@ -122,7 +122,7 @@ contract Escrow is Ownable(msg.sender) {
         uint256 _amount,
         bool _verifiedOrg,
         IERC20 _token
-    ) public returns (uint256) {
+    ) external returns (uint256) {
         require(_tokenExists(_token), 'Token is not valid');
 
         uint256 fee = _calculatesOrgFee(_amount, _verifiedOrg);
@@ -153,7 +153,7 @@ contract Escrow is Ownable(msg.sender) {
         return escrowId;
     }
 
-    function setContributor(uint256 _escrowId, address _contributor) public {
+    function setContributor(uint256 _escrowId, address _contributor) external {
         EscrowData memory escrow = escrowHistory[_escrowId];
         require(_contributor != escrow.contributor || msg.sender == escrow.contributor, 'Not allow');
         require(
@@ -195,7 +195,7 @@ contract Escrow is Ownable(msg.sender) {
 
     /* --------------------- Admin actions ---------------------------- */
 
-    function escrowDecision(uint256 _escrowId, bool _refund) public onlyOwner {
+    function escrowDecision(uint256 _escrowId, bool _refund) external onlyOwner {
         EscrowData memory escrow = escrowHistory[_escrowId];
         require(escrow.status == EscrowStatus.IN_PROGRESS, 'Escrow status is not valid for decision');
         if (_refund) {
@@ -224,37 +224,37 @@ contract Escrow is Ownable(msg.sender) {
     }
 
 
-    function setBeneficiary (address _address) public onlyOwner {
+    function setBeneficiary(address _address) external onlyOwner {
         beneficiaryAddress = _address;
     }
 
 
-    function setNoImpactContFee(uint _newFee) public onlyOwner {
+    function setNoImpactContFee(uint _newFee) external onlyOwner {
         require(_newFee != getNoImpactContFee());
         noImpactContFee = _newFee;
     }
 
-    function setNoImpactOrgFee(uint _newFee) public onlyOwner {
+    function setNoImpactOrgFee(uint _newFee) external onlyOwner {
         require(_newFee != getNoImpactOrgFee());
         noImpactOrgFee = _newFee;
     }
 
-    function setImpactContFee(uint _newFee) public onlyOwner {
+    function setImpactContFee(uint _newFee) external onlyOwner {
         require(_newFee != getImpactContFee());
         impactContFee = _newFee;
     }
 
-    function setImpactOrgFee(uint _newFee) public onlyOwner {
+    function setImpactOrgFee(uint _newFee) external onlyOwner {
         require(_newFee != getImpactOrgFee());
         impactOrgFee = _newFee;
     }
 
-    function setDecisionRetentionFee(uint _newFee) public onlyOwner {
+    function setDecisionRetentionFee(uint _newFee) external onlyOwner {
         require(_newFee != getDecisionRetentionFee());
         decisionRetentionFee = _newFee;
     }
 
-    function addToken(IERC20 _token) public onlyOwner returns (bool) {
+    function addToken(IERC20 _token) external onlyOwner returns (bool) {
         if (_tokenExists(_token)) {
             return false;
         }
@@ -265,7 +265,7 @@ contract Escrow is Ownable(msg.sender) {
     }
 
     // rewards value
-    function collectIncomeValue(IERC20 _token) public view onlyOwner returns (uint256) {
+    function collectIncomeValue(IERC20 _token) external view onlyOwner returns (uint256) {
         uint256 balance = _token.balanceOf(address(this));
         uint256 totalAmount = 0;
         for (uint i = 0; i < escrowHistoryLength; i++) {
@@ -280,7 +280,7 @@ contract Escrow is Ownable(msg.sender) {
     /* It may use for transfer assets to new Escrow contract version or
         use for collecting fees
     */
-    function transferAssets(address destination, IERC20 _token) public onlyOwner {
+    function transferAssets(address destination, IERC20 _token) external onlyOwner {
         uint256 balance = _token.balanceOf(address(this));
         require(balance >= 0, 'Not enough funds at the contract');
 
