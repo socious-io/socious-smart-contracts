@@ -15,6 +15,10 @@ contract Escrow is Ownable(msg.sender) {
     uint private noImpactOrgFee;
     uint private impactOrgFee;
     uint private decisionRetentionFee;
+    uint private referredOrgFeeDiscount;
+    uint private referredContFeeDiscount;
+    uint private referringOrgBonus;
+    uint private referringContBonus;
 
     enum EscrowStatus {
         IN_PROGRESS,
@@ -32,6 +36,8 @@ contract Escrow is Ownable(msg.sender) {
         uint amount; // Escrow amount value
         uint fee; // Fee cost for escrow amount already taken
         bool verifiedOrg;
+        address addressReferringOrg; // Null if absent
+        address addressReferringCont; // Null if absent
         EscrowStatus status;
         IERC20 token;
     }
@@ -60,6 +66,10 @@ contract Escrow is Ownable(msg.sender) {
         noImpactOrgFee = 3;
         impactOrgFee = 2;
         decisionRetentionFee = 1;
+        referredOrgFeeDiscount = 50;
+        referredContFeeDiscount = 50;
+        referringOrgBonus = 1;
+        referringContBonus = 1;
         escrowHistoryLength = 0;
         tokensLength = 0;
 
@@ -87,6 +97,22 @@ contract Escrow is Ownable(msg.sender) {
 
     function getDecisionRetentionFee() public view returns (uint) {
         return decisionRetentionFee;
+    }
+
+    function getReferredOrgFeeDiscount() public view returns (uint) {
+        return referredOrgFeeDiscount;
+    }
+
+    function getReferredContFeeDiscount() public view returns (uint) {
+        return referredContFeeDiscount;
+    }
+
+    function getReferringOrgBonus() public view returns (uint) {
+        return referringOrgBonus;
+    }
+
+    function getReferringContBonus() public view returns (uint) {
+        return referringContBonus;
     }
 
     function getEscrow(uint256 _escrowId) external view returns (EscrowData memory) {
@@ -121,18 +147,25 @@ contract Escrow is Ownable(msg.sender) {
         string memory _jobId,
         uint256 _amount,
         bool _verifiedOrg,
+        address _addressReferringOrg, // Null if absent
+        address _addressReferringCont, // Null if absent
         IERC20 _token
     ) external returns (uint256) {
         require(_tokenExists(_token), 'Token is not valid');
 
-        uint256 fee = _calculatesOrgFee(_amount, _verifiedOrg);
+        bool referredOrg = _addressReferringOrg != address(0);
+
+        uint256 fee = _calculatesOrgFee(_amount, _verifiedOrg, referredOrg);
         uint256 totalAmount = _amount + fee;
 
         require(_token.balanceOf(msg.sender) >= totalAmount, 'Not enough funds');
         require(_token.allowance(msg.sender, address(this)) >= totalAmount, 'Not enough allowance');
 
-        bool successLock = _token.transferFrom(msg.sender, address(this), totalAmount);
-        require(successLock, 'Funds lockment failed!');
+        // Avoiding "Stack too deep" error with separate scope
+        {
+          bool successLock = _token.transferFrom(msg.sender, address(this), totalAmount);
+          require(successLock, 'Funds lockment failed!');
+        }
 
         escrowHistory[escrowHistoryLength] = EscrowData({
                 organization: msg.sender,
@@ -142,9 +175,10 @@ contract Escrow is Ownable(msg.sender) {
                 fee: fee,
                 token: _token,
                 status: EscrowStatus.IN_PROGRESS,
-                verifiedOrg: _verifiedOrg
+                verifiedOrg: _verifiedOrg,
+                addressReferringOrg: _addressReferringOrg,
+                addressReferringCont: _addressReferringCont
             });
-            
 
         uint256 escrowId = escrowHistoryLength;
         escrowHistoryLength++;
@@ -153,7 +187,11 @@ contract Escrow is Ownable(msg.sender) {
         return escrowId;
     }
 
-    function setContributor(uint256 _escrowId, address _contributor) external {
+    function setContributor(
+        uint256 _escrowId,
+        address _contributor,
+        address _addressReferringCont // Null if absent
+    ) external {
         EscrowData memory escrow = escrowHistory[_escrowId];
         require(_contributor != escrow.contributor || msg.sender == escrow.contributor, 'Not allow');
         require(
@@ -162,6 +200,7 @@ contract Escrow is Ownable(msg.sender) {
         );
 
         escrowHistory[_escrowId].contributor = _contributor;
+        escrowHistory[_escrowId].addressReferringCont = _addressReferringCont;
     }
 
     function withdrawn(uint256 _escrowId) public {
@@ -173,24 +212,45 @@ contract Escrow is Ownable(msg.sender) {
         );
         require(escrow.status == EscrowStatus.IN_PROGRESS, 'Escrow status is not valid to withdrawn');
 
-        uint256 fee = _calculatesContFee(escrow.amount, escrow.verifiedOrg);
-        uint256 amount = escrow.amount - fee;
+        bool referredCont = escrow.addressReferringCont != address(0);
+
+        uint256 contributorFee = _calculatesContFee(escrow.amount, escrow.verifiedOrg, referredCont);
+        uint256 amount = escrow.amount - contributorFee;
+        uint256 ownerFee = escrow.fee + contributorFee;
 
         require(escrow.token.balanceOf(address(this)) >= amount, 'Not enough funds at the contract');
+
+        // Organization referred
+        if (escrow.addressReferringOrg != address(0)) {
+          uint256 referringBonus = amount / 100 * referringOrgBonus;
+          ownerFee -= referringBonus;
+
+          bool addressReferringOrgTransfer = escrow.token.transfer(escrow.addressReferringOrg, referringBonus);
+          require(addressReferringOrgTransfer, 'Transfer to address referring organization failed');
+        }
+
+        // Contributor referred
+        if (escrow.addressReferringCont != address(0)) {
+          uint256 referringBonus = amount / 100 * referringContBonus;
+          ownerFee -= referringBonus;
+
+          bool addressReferringContTransfer = escrow.token.transfer(escrow.addressReferringCont, referringBonus);
+          require(addressReferringContTransfer, 'Transfer to address referring contributor failed');
+        }
 
         bool successTransfer = escrow.token.transfer(escrow.contributor, amount);
         require(successTransfer, 'Transfer to contributor failed');
 
-        bool ownerRewardTransfer = escrow.token.transfer(beneficiaryAddress, escrow.fee + fee);
+        bool ownerRewardTransfer = escrow.token.transfer(beneficiaryAddress, ownerFee);
         require(ownerRewardTransfer, 'Transfer fee to owners failed');
 
         escrowHistory[_escrowId].status = EscrowStatus.COMPELETED;
 
         transactionsHistory[escrow.contributor].push(
-            TransactionData({ escrowId: _escrowId, amount: amount, fee: fee })
+            TransactionData({ escrowId: _escrowId, amount: amount, fee: ownerFee })
         );
 
-        emit TransferAction(_escrowId, escrow.contributor, fee, amount);
+        emit TransferAction(_escrowId, escrow.contributor, contributorFee, amount);
     }
 
     /* --------------------- Admin actions ---------------------------- */
@@ -254,6 +314,32 @@ contract Escrow is Ownable(msg.sender) {
         decisionRetentionFee = _newFee;
     }
 
+    function setReferredOrgFeeDiscount(uint _newDiscount) external onlyOwner {
+        require(_newDiscount != getReferredOrgFeeDiscount());
+        require(_newDiscount <= 100, "Discount cannot be more than 100%");
+
+        referredOrgFeeDiscount = _newDiscount;
+    }
+
+    function setReferredContFeeDiscount(uint _newDiscount) external onlyOwner {
+        require(_newDiscount != getReferredContFeeDiscount());
+        require(_newDiscount <= 100, "Discount cannot be more than 100%");
+
+        referredContFeeDiscount = _newDiscount;
+    }
+
+    function setReferringOrgBonus(uint _newFee) external onlyOwner {
+        require(_newFee != getReferringOrgBonus());
+
+        referringOrgBonus = _newFee;
+    }
+
+    function setReferringContBonus(uint _newFee) external onlyOwner {
+        require(_newFee != getReferringContBonus());
+
+        referringContBonus = _newFee;
+    }
+
     function addToken(IERC20 _token) external onlyOwner returns (bool) {
         if (_tokenExists(_token)) {
             return false;
@@ -289,18 +375,24 @@ contract Escrow is Ownable(msg.sender) {
     }
 
     /* ------------------------ Internals ----------------------------- */
-    function _calculatesOrgFee(uint256 _value, bool _verified) internal view returns (uint256) {
+    function _calculatesOrgFee(uint256 _value, bool _verified, bool _referredOrg) internal view returns (uint256) {
         uint _fee = noImpactOrgFee;
         if (_verified) _fee = impactOrgFee;
 
-        return (_value / 100) * _fee;
+        _fee = (_value / 100) * _fee; // Fee without referring system discount
+        if (_referredOrg) _fee = _fee - (_fee * referredOrgFeeDiscount / 100);
+
+        return _fee;
     }
 
-    function _calculatesContFee(uint256 _value, bool _verified) internal view returns (uint256) {
+    function _calculatesContFee(uint256 _value, bool _verified, bool _referredCont) internal view returns (uint256) {
         uint _fee = noImpactContFee;
         if (_verified) _fee = impactContFee;
 
-        return (_value / 100) * _fee;
+        _fee = (_value / 100) * _fee; // Fee without referring system discount
+        if (_referredCont) _fee = _fee - (_fee * referredContFeeDiscount / 100);
+
+        return _fee;
     }
 
     function _tokenExists(IERC20 _token) internal view returns (bool) {
