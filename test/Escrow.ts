@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { ethers, artifacts } from 'hardhat'
-import { parseUnits, formatEther } from 'ethers/lib/utils'
+import { parseUnits } from 'ethers/lib/utils'
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 
 describe('Escrow', async () => {
@@ -20,7 +20,7 @@ describe('Escrow', async () => {
     const MockUSDC = await artifacts.readArtifact('MockUSDC')
     const EscrowArtifact = await artifacts.readArtifact('Escrow')
 
-    const [owner, sender, reciever, newOwner] = await ethers.getSigners()
+    const [owner, sender, reciever, newOwner, orgReferrer, contReferrer] = await ethers.getSigners()
 
     const mockUsdcFactory = new ethers.ContractFactory(MockUSDC.abi, MockUSDC.bytecode, owner)
     const mockUsdcContract = await mockUsdcFactory.deploy()
@@ -30,8 +30,10 @@ describe('Escrow', async () => {
 
     await escrowContract.addToken(mockUsdcContract.address, { gasLimit: 5000000 })
 
-    return { owner, sender, reciever, newOwner, mockUsdcContract, escrowContract }
+    return { owner, sender, reciever, newOwner, mockUsdcContract, escrowContract, orgReferrer, contReferrer }
   }
+
+
 
   describe('Validate token interface from Escrow', async () => {
     it('Should bring the properties from the token', async () => {
@@ -57,7 +59,7 @@ describe('Escrow', async () => {
         .withArgs(sender.address, escrowContract.address, data.expectedAmount)
 
       await expect(
-        await senderEscrow.newEscrow(reciever.address, data.jobId, data.amount, false, mockUsdcContract.address)
+        await senderEscrow.newEscrow(reciever.address, data.jobId, data.amount, false, ethers.constants.AddressZero, ethers.constants.AddressZero, mockUsdcContract.address)
       )
         .to.emit(senderEscrow, 'EscrowAction')
         .withArgs(
@@ -86,8 +88,8 @@ describe('Escrow', async () => {
       const ownerEscrow = escrowContract.connect(owner)
 
       await senderUsdc.approve(escrowContract.address, data.expectedAmount)
-      await senderEscrow.newEscrow(sender.address, data.jobId, data.amount, false, mockUsdcContract.address)
-      await senderEscrow.setContributor(data.escrowId, reciever.address)
+      await senderEscrow.newEscrow(sender.address, data.jobId, data.amount, false, ethers.constants.AddressZero, ethers.constants.AddressZero, mockUsdcContract.address)
+      await senderEscrow.setContributor(data.escrowId, reciever.address, ethers.constants.AddressZero)
 
       expect(await ownerEscrow.escrowDecision(data.escrowId, true))
         .to.emit(escrowContract, 'TransferAction')
@@ -105,13 +107,89 @@ describe('Escrow', async () => {
       const ownerEscrow = escrowContract.connect(owner)
 
       await senderUsdc.approve(escrowContract.address, data.expectedAmount)
-      await senderEscrow.newEscrow(sender.address, data.jobId, data.amount, false, mockUsdcContract.address)
-      await senderEscrow.setContributor(data.escrowId, reciever.address)
+      await senderEscrow.newEscrow(
+        sender.address,
+        data.jobId,
+        data.amount,
+        false,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        mockUsdcContract.address)
+      await senderEscrow.setContributor(data.escrowId, reciever.address, ethers.constants.AddressZero)
 
       expect(await ownerEscrow.escrowDecision(data.escrowId, false))
         .to.emit(escrowContract, 'TransferAction')
         .withArgs(data.escrowId, sender.address, data.expectedWithdrawnFee, data.expectedWithdrawnFee)
       expect(JSON.parse(await mockUsdcContract.balanceOf(owner.address))).to.equal(13)
+    })
+  })
+
+  describe('Referral system', async () => {
+    it('Should apply benefits if organization is referred', async () => {
+      const { owner, sender, reciever, mockUsdcContract, escrowContract, orgReferrer } = await loadFixture(escrowSetup)
+
+      await mockUsdcContract.mint(sender.address, parseUnits('3.0', 'ether'))
+
+      const senderUsdc = mockUsdcContract.connect(sender)
+      const senderEscrow = escrowContract.connect(sender)
+
+      await senderUsdc.approve(escrowContract.address, 1015)
+      
+      await expect(await senderEscrow.newEscrow(reciever.address, data.jobId, 1000, false, orgReferrer.address, ethers.constants.AddressZero, mockUsdcContract.address))
+        .to.emit(escrowContract, 'EscrowAction')
+        .withArgs(data.escrowId, 15, 1000, sender.address, data.jobId, mockUsdcContract.address)
+
+      await expect(await senderEscrow.withdrawn(data.escrowId))
+        .to.emit(escrowContract, 'TransferAction')
+        .withArgs(data.escrowId, reciever.address, 100, 900)
+      
+      expect(JSON.parse(await mockUsdcContract.balanceOf(owner.address))).to.equal(106)
+      expect(JSON.parse(await mockUsdcContract.balanceOf(orgReferrer.address))).to.equal(9)
+    })
+
+    it('Should apply benefits if contributor is referred', async () => {
+      const { owner, sender, reciever, mockUsdcContract, escrowContract, contReferrer } = await loadFixture(escrowSetup)
+
+      await mockUsdcContract.mint(sender.address, parseUnits('3.0', 'ether'))
+
+      const senderUsdc = mockUsdcContract.connect(sender)
+      const senderEscrow = escrowContract.connect(sender)
+
+      await senderUsdc.approve(escrowContract.address, 1030)
+      
+      await expect(await senderEscrow.newEscrow(reciever.address, data.jobId, 1000, false, ethers.constants.AddressZero, contReferrer.address, mockUsdcContract.address))
+        .to.emit(escrowContract, 'EscrowAction')
+        .withArgs(data.escrowId, 30, 1000, sender.address, data.jobId, mockUsdcContract.address)
+
+      await expect(await senderEscrow.withdrawn(data.escrowId))
+        .to.emit(escrowContract, 'TransferAction')
+        .withArgs(data.escrowId, reciever.address, 50, 950)
+      
+      expect(JSON.parse(await mockUsdcContract.balanceOf(owner.address))).to.equal(71)
+      expect(JSON.parse(await mockUsdcContract.balanceOf(contReferrer.address))).to.equal(9)
+    })
+
+    it('Should apply benefits if organization and contributor are referred by different users', async () => {
+      const { owner, sender, reciever, mockUsdcContract, escrowContract, orgReferrer, contReferrer } = await loadFixture(escrowSetup)
+
+      await mockUsdcContract.mint(sender.address, parseUnits('3.0', 'ether'))
+
+      const senderUsdc = mockUsdcContract.connect(sender)
+      const senderEscrow = escrowContract.connect(sender)
+
+      await senderUsdc.approve(escrowContract.address, 1015)
+      
+      await expect(await senderEscrow.newEscrow(reciever.address, data.jobId, 1000, false, orgReferrer.address, contReferrer.address, mockUsdcContract.address))
+        .to.emit(escrowContract, 'EscrowAction')
+        .withArgs(data.escrowId, 15, 1000, sender.address, data.jobId, mockUsdcContract.address)
+
+      await expect(await senderEscrow.withdrawn(data.escrowId))
+        .to.emit(escrowContract, 'TransferAction')
+        .withArgs(data.escrowId, reciever.address, 50, 950)
+      
+      expect(JSON.parse(await mockUsdcContract.balanceOf(owner.address))).to.equal(47)
+      expect(JSON.parse(await mockUsdcContract.balanceOf(orgReferrer.address))).to.equal(9)
+      expect(JSON.parse(await mockUsdcContract.balanceOf(contReferrer.address))).to.equal(9)
     })
   })
 })
