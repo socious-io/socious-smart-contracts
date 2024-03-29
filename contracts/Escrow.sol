@@ -38,6 +38,8 @@ contract Escrow is Ownable(msg.sender) {
         bool verifiedOrg;
         address addressReferringOrg; // Null if absent
         address addressReferringCont; // Null if absent
+        bool applyOrgFeeDiscount;
+        bool applyContFeeDiscount;
         EscrowStatus status;
         IERC20 token;
     }
@@ -149,20 +151,21 @@ contract Escrow is Ownable(msg.sender) {
         bool _verifiedOrg,
         address _addressReferringOrg, // Null if absent
         address _addressReferringCont, // Null if absent
+        bool _applyOrgFeeDiscount,
+        bool _applyContFeeDiscount,
         IERC20 _token
     ) external returns (uint256) {
         require(_tokenExists(_token), 'Token is not valid');
 
-        bool referredOrg = _addressReferringOrg != address(0);
-
-        uint256 fee = _calculatesOrgFee(_amount, _verifiedOrg, referredOrg);
-        uint256 totalAmount = _amount + fee;
-
-        require(_token.balanceOf(msg.sender) >= totalAmount, 'Not enough funds');
-        require(_token.allowance(msg.sender, address(this)) >= totalAmount, 'Not enough allowance');
+        uint256 fee = _calculatesOrgFee(_amount, _verifiedOrg, _applyOrgFeeDiscount);
 
         // Avoiding "Stack too deep" error with separate scope
         {
+          uint256 totalAmount = _amount + fee;
+
+          require(_token.balanceOf(msg.sender) >= totalAmount, 'Not enough funds');
+          require(_token.allowance(msg.sender, address(this)) >= totalAmount, 'Not enough allowance');
+
           bool successLock = _token.transferFrom(msg.sender, address(this), totalAmount);
           require(successLock, 'Funds lockment failed!');
         }
@@ -177,7 +180,9 @@ contract Escrow is Ownable(msg.sender) {
                 status: EscrowStatus.IN_PROGRESS,
                 verifiedOrg: _verifiedOrg,
                 addressReferringOrg: _addressReferringOrg,
-                addressReferringCont: _addressReferringCont
+                addressReferringCont: _addressReferringCont,
+                applyOrgFeeDiscount: _applyOrgFeeDiscount,
+                applyContFeeDiscount: _applyContFeeDiscount
             });
 
         uint256 escrowId = escrowHistoryLength;
@@ -190,7 +195,8 @@ contract Escrow is Ownable(msg.sender) {
     function setContributor(
         uint256 _escrowId,
         address _contributor,
-        address _addressReferringCont // Null if absent
+        address _addressReferringCont, // Null if absent
+        bool _applyContFeeDiscount
     ) external {
         EscrowData memory escrow = escrowHistory[_escrowId];
         require(_contributor != escrow.contributor || msg.sender == escrow.contributor, 'Not allow');
@@ -201,6 +207,7 @@ contract Escrow is Ownable(msg.sender) {
 
         escrowHistory[_escrowId].contributor = _contributor;
         escrowHistory[_escrowId].addressReferringCont = _addressReferringCont;
+        escrowHistory[_escrowId].applyContFeeDiscount = _applyContFeeDiscount;
     }
 
     function withdrawn(uint256 _escrowId) public {
@@ -212,9 +219,7 @@ contract Escrow is Ownable(msg.sender) {
         );
         require(escrow.status == EscrowStatus.IN_PROGRESS, 'Escrow status is not valid to withdrawn');
 
-        bool referredCont = escrow.addressReferringCont != address(0);
-
-        uint256 contributorFee = _calculatesContFee(escrow.amount, escrow.verifiedOrg, referredCont);
+        uint256 contributorFee = _calculatesContFee(escrow.amount, escrow.verifiedOrg, escrow.applyContFeeDiscount);
         uint256 amount = escrow.amount - contributorFee;
         uint256 ownerFee = escrow.fee + contributorFee;
 
@@ -375,22 +380,22 @@ contract Escrow is Ownable(msg.sender) {
     }
 
     /* ------------------------ Internals ----------------------------- */
-    function _calculatesOrgFee(uint256 _value, bool _verified, bool _referredOrg) internal view returns (uint256) {
+    function _calculatesOrgFee(uint256 _value, bool _verified, bool _applyOrgFeeDiscount) internal view returns (uint256) {
         uint _fee = noImpactOrgFee;
         if (_verified) _fee = impactOrgFee;
 
         _fee = (_value / 100) * _fee; // Fee without referring system discount
-        if (_referredOrg) _fee = _fee - (_fee * referredOrgFeeDiscount / 100);
+        if (_applyOrgFeeDiscount) _fee = _fee - (_fee * referredOrgFeeDiscount / 100);
 
         return _fee;
     }
 
-    function _calculatesContFee(uint256 _value, bool _verified, bool _referredCont) internal view returns (uint256) {
+    function _calculatesContFee(uint256 _value, bool _verified, bool _applyContFeeDiscount) internal view returns (uint256) {
         uint _fee = noImpactContFee;
         if (_verified) _fee = impactContFee;
 
         _fee = (_value / 100) * _fee; // Fee without referring system discount
-        if (_referredCont) _fee = _fee - (_fee * referredContFeeDiscount / 100);
+        if (_applyContFeeDiscount) _fee = _fee - (_fee * referredContFeeDiscount / 100);
 
         return _fee;
     }
