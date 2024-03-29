@@ -59,7 +59,16 @@ describe('Escrow', async () => {
         .withArgs(sender.address, escrowContract.address, data.expectedAmount)
 
       await expect(
-        await senderEscrow.newEscrow(reciever.address, data.jobId, data.amount, false, ethers.constants.AddressZero, ethers.constants.AddressZero, mockUsdcContract.address)
+        await senderEscrow.newEscrow(
+          reciever.address,
+          data.jobId,
+          data.amount,
+          false,
+          ethers.constants.AddressZero,
+          ethers.constants.AddressZero,
+          false,
+          false,
+          mockUsdcContract.address)
       )
         .to.emit(senderEscrow, 'EscrowAction')
         .withArgs(
@@ -88,8 +97,18 @@ describe('Escrow', async () => {
       const ownerEscrow = escrowContract.connect(owner)
 
       await senderUsdc.approve(escrowContract.address, data.expectedAmount)
-      await senderEscrow.newEscrow(sender.address, data.jobId, data.amount, false, ethers.constants.AddressZero, ethers.constants.AddressZero, mockUsdcContract.address)
-      await senderEscrow.setContributor(data.escrowId, reciever.address, ethers.constants.AddressZero)
+      await senderEscrow.newEscrow(
+        sender.address,
+        data.jobId,
+        data.amount,
+        false,
+        ethers.constants.AddressZero,
+        ethers.constants.AddressZero,
+        false,
+        false,
+        mockUsdcContract.address
+      )
+      await senderEscrow.setContributor(data.escrowId, reciever.address, ethers.constants.AddressZero, false)
 
       expect(await ownerEscrow.escrowDecision(data.escrowId, true))
         .to.emit(escrowContract, 'TransferAction')
@@ -114,8 +133,10 @@ describe('Escrow', async () => {
         false,
         ethers.constants.AddressZero,
         ethers.constants.AddressZero,
+        false,
+        false,
         mockUsdcContract.address)
-      await senderEscrow.setContributor(data.escrowId, reciever.address, ethers.constants.AddressZero)
+      await senderEscrow.setContributor(data.escrowId, reciever.address, ethers.constants.AddressZero, false)
 
       expect(await ownerEscrow.escrowDecision(data.escrowId, false))
         .to.emit(escrowContract, 'TransferAction')
@@ -135,7 +156,7 @@ describe('Escrow', async () => {
 
       await senderUsdc.approve(escrowContract.address, 1015)
       
-      await expect(await senderEscrow.newEscrow(reciever.address, data.jobId, 1000, false, orgReferrer.address, ethers.constants.AddressZero, mockUsdcContract.address))
+      await expect(await senderEscrow.newEscrow(reciever.address, data.jobId, 1000, false, orgReferrer.address, ethers.constants.AddressZero, true, false, mockUsdcContract.address))
         .to.emit(escrowContract, 'EscrowAction')
         .withArgs(data.escrowId, 15, 1000, sender.address, data.jobId, mockUsdcContract.address)
 
@@ -157,7 +178,17 @@ describe('Escrow', async () => {
 
       await senderUsdc.approve(escrowContract.address, 1030)
       
-      await expect(await senderEscrow.newEscrow(reciever.address, data.jobId, 1000, false, ethers.constants.AddressZero, contReferrer.address, mockUsdcContract.address))
+      await expect(await senderEscrow.newEscrow(
+        reciever.address,
+        data.jobId,
+        1000,
+        false,
+        ethers.constants.AddressZero,
+        contReferrer.address,
+        false,
+        true,
+        mockUsdcContract.address
+      ))
         .to.emit(escrowContract, 'EscrowAction')
         .withArgs(data.escrowId, 30, 1000, sender.address, data.jobId, mockUsdcContract.address)
 
@@ -179,7 +210,17 @@ describe('Escrow', async () => {
 
       await senderUsdc.approve(escrowContract.address, 1015)
       
-      await expect(await senderEscrow.newEscrow(reciever.address, data.jobId, 1000, false, orgReferrer.address, contReferrer.address, mockUsdcContract.address))
+      await expect(await senderEscrow.newEscrow(
+        reciever.address,
+        data.jobId,
+        1000,
+        false,
+        orgReferrer.address,
+        contReferrer.address,
+        true,
+        true,
+        mockUsdcContract.address
+      ))
         .to.emit(escrowContract, 'EscrowAction')
         .withArgs(data.escrowId, 15, 1000, sender.address, data.jobId, mockUsdcContract.address)
 
