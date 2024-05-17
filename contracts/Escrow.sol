@@ -227,7 +227,7 @@ contract Escrow is Ownable(msg.sender) {
 
         // Organization referred
         if (escrow.addressReferringOrg != address(0)) {
-          uint256 referringBonus = amount / 100 * referringOrgBonus;
+          uint256 referringBonus = escrow.amount / 100 * referringOrgBonus;
           ownerFee -= referringBonus;
 
           bool addressReferringOrgTransfer = escrow.token.transfer(escrow.addressReferringOrg, referringBonus);
@@ -236,7 +236,7 @@ contract Escrow is Ownable(msg.sender) {
 
         // Contributor referred
         if (escrow.addressReferringCont != address(0)) {
-          uint256 referringBonus = amount / 100 * referringContBonus;
+          uint256 referringBonus = escrow.amount / 100 * referringContBonus;
           ownerFee -= referringBonus;
 
           bool addressReferringContTransfer = escrow.token.transfer(escrow.addressReferringCont, referringBonus);
